@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { getStoredCourses } from '../constants';
 import { Lesson } from '../types';
 import AIAssistant from '../components/AIAssistant';
@@ -10,9 +10,11 @@ import { getCertificateRecord, getCertificateStatus, getCourseProgress, getStore
 
 const CoursePlayer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const startLessonId = queryParams.get('lesson');
+  const paymentStatus = queryParams.get('payment');
 
   const courses = getStoredCourses();
   const course = courses.find(c => c.id === id);
@@ -58,6 +60,20 @@ const CoursePlayer: React.FC = () => {
     });
   }, [certificateId, course, isCertificatePaid]);
 
+  useEffect(() => {
+    if (!course || paymentStatus !== 'success') return;
+    const recordId = certificateId || `CERT-${course.id}-${Date.now()}`;
+    setIsCertificatePaid(true);
+    setCertificateStatus(course.id, true);
+    setCertificateId(recordId);
+    setCertificateRecord({
+      courseId: course.id,
+      certificateId: recordId,
+      issuedAt: new Date().toISOString()
+    });
+    navigate(`/learn/${course.id}`, { replace: true });
+  }, [certificateId, course, navigate, paymentStatus]);
+
   if (!course) return <div className="p-20 text-center font-bold">Curso no disponible</div>;
 
   const toggleComplete = (lessonId: string) => {
@@ -71,6 +87,13 @@ const CoursePlayer: React.FC = () => {
 
   const totalLessonsCount = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const progressPercent = totalLessonsCount > 0 ? Math.round((completedLessons.length / totalLessonsCount) * 100) : 0;
+  const allLessons = course.modules.flatMap(module => module.lessons);
+  const currentLessonIndex = allLessons.findIndex(lesson => lesson.id === currentLesson?.id);
+  const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
+  const nextLesson = currentLessonIndex >= 0 && currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null;
+  const isCurrentCompleted = currentLesson ? completedLessons.includes(currentLesson.id) : false;
+  const paymentUrl = import.meta.env.VITE_PSE_PAYMENT_URL as string | undefined;
+  const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/learn/${course.id}?payment=success` : '';
 
   const certificateDownloadUrl = useMemo(() => {
     if (!isCertificatePaid || !user) return null;
@@ -138,7 +161,13 @@ const CoursePlayer: React.FC = () => {
           <div className="flex-1 flex items-center justify-center p-4 md:p-12 relative">
              <div className="w-full max-w-5xl aspect-video bg-black rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/5">
                 {currentLesson?.type === 'video' ? (
-                  <video key={currentLesson.id} controls className="w-full h-full object-cover" src={currentLesson.videoUrl}></video>
+                  <video
+                    key={currentLesson.id}
+                    controls
+                    className="w-full h-full object-cover"
+                    src={currentLesson.videoUrl}
+                    onEnded={() => currentLesson && toggleComplete(currentLesson.id)}
+                  ></video>
                 ) : currentLesson?.type === 'quiz' ? (
                   <div className="w-full h-full bg-white flex flex-col items-center justify-center">
                     <Evaluation questions={currentLesson.evaluation || []} onComplete={(score) => score >= 70 && toggleComplete(currentLesson.id)} />
@@ -187,6 +216,14 @@ const CoursePlayer: React.FC = () => {
                     ) : (
                        <p className="text-gray-400 italic">No hay contenido de texto disponible para esta lección.</p>
                     )}
+                    {currentLesson && (
+                      <button
+                        onClick={() => toggleComplete(currentLesson.id)}
+                        className="mt-10 bg-[#00255d] text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
+                      >
+                        Marcar lectura como completada
+                      </button>
+                    )}
                   </div>
                 )}
              </div>
@@ -198,14 +235,36 @@ const CoursePlayer: React.FC = () => {
                 <h3 className="text-2xl font-black text-white">{currentLesson?.title}</h3>
                 <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest mt-2">{currentLesson?.duration} • Recurso Digital Langford</p>
               </div>
-              <button 
-                onClick={() => toggleComplete(currentLesson?.id || '')} 
-                className={`px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[2px] transition-all ${completedLessons.includes(currentLesson?.id || '') ? 'bg-green-500 text-white' : 'bg-[#d4af37] text-black hover:scale-105'}`}
-              >
-                {completedLessons.includes(currentLesson?.id || '') ? (
-                  <span className="flex items-center"><i className="fas fa-check-circle mr-3"></i> Lección Finalizada</span>
-                ) : 'Marcar como completada'}
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <button
+                  onClick={() => prevLesson && setCurrentLesson(prevLesson)}
+                  disabled={!prevLesson}
+                  className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-[2px] transition-all ${prevLesson ? 'bg-white/10 text-white hover:scale-105' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}
+                >
+                  Anterior
+                </button>
+                <button 
+                  onClick={() => currentLesson && toggleComplete(currentLesson.id)} 
+                  className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-[2px] transition-all ${isCurrentCompleted ? 'bg-green-500 text-white' : 'bg-[#d4af37] text-black hover:scale-105'}`}
+                >
+                  {isCurrentCompleted ? (
+                    <span className="flex items-center"><i className="fas fa-check-circle mr-3"></i> Lección Finalizada</span>
+                  ) : 'Marcar como completada'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (!currentLesson || !nextLesson) return;
+                    if (!isCurrentCompleted) {
+                      toggleComplete(currentLesson.id);
+                    }
+                    setCurrentLesson(nextLesson);
+                  }}
+                  disabled={!nextLesson}
+                  className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-[2px] transition-all ${nextLesson ? 'bg-white/10 text-white hover:scale-105' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}
+                >
+                  Siguiente
+                </button>
+              </div>
             </div>
           </div>
 
@@ -231,12 +290,20 @@ const CoursePlayer: React.FC = () => {
                    </a>
                  </div>
                ) : (
-                 <button 
-                   onClick={() => setIsPSEOpen(true)}
-                   className="bg-black text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all uppercase tracking-widest shadow-xl"
-                 >
-                   Obtener Certificación Oficial (${course.certificatePrice.toLocaleString('es-CO')} COP)
-                 </button>
+                 <div className="space-y-4">
+                   <button 
+                     onClick={() => paymentUrl && setIsPSEOpen(true)}
+                     disabled={!paymentUrl}
+                     className={`px-12 py-5 rounded-2xl font-black text-xl uppercase tracking-widest shadow-xl transition-all ${paymentUrl ? 'bg-black text-white hover:scale-110' : 'bg-black/40 text-gray-300 cursor-not-allowed'}`}
+                   >
+                     Obtener Certificación Oficial (${course.certificatePrice.toLocaleString('es-CO')} COP)
+                   </button>
+                   {!paymentUrl && (
+                     <p className="text-xs text-black/70 font-semibold">
+                       Configura <span className="font-black">VITE_PSE_PAYMENT_URL</span> para habilitar el pago con PSE.
+                     </p>
+                   )}
+                 </div>
                )}
             </div>
           )}
@@ -280,23 +347,16 @@ const CoursePlayer: React.FC = () => {
         </div>
       </div>
 
-      <PSEModal 
-        isOpen={isPSEOpen} 
-        onClose={() => setIsPSEOpen(false)} 
-        amount={course.certificatePrice}
-        courseTitle={`Certificación Langford: ${course.title}`}
-        onSuccess={() => {
-          const recordId = certificateId || `CERT-${course.id}-${Date.now()}`;
-          setIsCertificatePaid(true);
-          setCertificateStatus(course.id, true);
-          setCertificateId(recordId);
-          setCertificateRecord({
-            courseId: course.id,
-            certificateId: recordId,
-            issuedAt: new Date().toISOString()
-          });
-        }}
-      />
+      {paymentUrl && (
+        <PSEModal 
+          isOpen={isPSEOpen} 
+          onClose={() => setIsPSEOpen(false)} 
+          amount={course.certificatePrice}
+          courseTitle={`Certificación Langford: ${course.title}`}
+          paymentUrl={paymentUrl}
+          returnUrl={returnUrl}
+        />
+      )}
       <AIAssistant courseContext={course.longDescription} />
     </div>
   );

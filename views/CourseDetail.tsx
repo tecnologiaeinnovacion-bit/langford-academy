@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { getStoredCourses } from '../constants';
 import PSEModal from '../components/PSEModal';
 import { addEnrollment, getEnrollments, getStoredUser } from '../services/storage';
@@ -8,11 +8,17 @@ import { addEnrollment, getEnrollments, getStoredUser } from '../services/storag
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const paymentStatus = queryParams.get('payment');
   const courses = getStoredCourses();
   const course = courses.find(c => c.id === id);
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [isPSEOpen, setIsPSEOpen] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const paymentUrl = import.meta.env.VITE_PSE_PAYMENT_URL as string | undefined;
+  const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/course/${course?.id}?payment=success` : '';
 
   useEffect(() => {
     const enrollments = getEnrollments();
@@ -24,9 +30,17 @@ const CourseDetail: React.FC = () => {
     }
   }, [course]);
 
+  useEffect(() => {
+    if (!course || paymentStatus !== 'success') return;
+    addEnrollment(course.id);
+    setIsEnrolled(true);
+    navigate(`/learn/${course.id}`, { replace: true });
+  }, [course, navigate, paymentStatus]);
+
   if (!course) return <div className="p-10 text-center font-bold">Curso no encontrado</div>;
 
   const handleEnrollClick = () => {
+    setPaymentError('');
     const user = getStoredUser();
     if (!user) {
       navigate('/login');
@@ -37,6 +51,10 @@ const CourseDetail: React.FC = () => {
     setIsEnrolled(true);
 
     if (course.price > 0) {
+      if (!paymentUrl) {
+        setPaymentError('Configura VITE_PSE_PAYMENT_URL para habilitar pagos con PSE.');
+        return;
+      }
       setIsPSEOpen(true);
     } else {
       navigate(`/learn/${course.id}`);
@@ -86,6 +104,9 @@ const CourseDetail: React.FC = () => {
                 >
                   {course.price > 0 ? `Inscribirme por $${course.price.toLocaleString('es-CO')}` : 'Inscribirse Gratis'}
                 </button>
+              )}
+              {paymentError && (
+                <p className="text-xs text-red-200 font-semibold">{paymentError}</p>
               )}
               <div className="text-left">
                 <p className="text-cyan-400 font-black text-xl">{(course.studentsCount + 2450).toLocaleString()}</p>
@@ -196,16 +217,16 @@ const CourseDetail: React.FC = () => {
         </div>
       </div>
 
-      <PSEModal 
-        isOpen={isPSEOpen} 
-        onClose={() => setIsPSEOpen(false)} 
-        amount={course.price || 0}
-        courseTitle={course.title}
-        onSuccess={() => {
-           setIsEnrolled(true);
-           navigate(`/learn/${course.id}`);
-        }}
-      />
+      {paymentUrl && (
+        <PSEModal 
+          isOpen={isPSEOpen} 
+          onClose={() => setIsPSEOpen(false)} 
+          amount={course.price || 0}
+          courseTitle={course.title}
+          paymentUrl={paymentUrl}
+          returnUrl={returnUrl}
+        />
+      )}
     </div>
   );
 };
