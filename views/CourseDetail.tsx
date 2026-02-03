@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getStoredCourses } from '../constants';
 import PSEModal from '../components/PSEModal';
+import { addEnrollment, getEnrollments, getStoredUser } from '../services/storage';
 
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +15,7 @@ const CourseDetail: React.FC = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
-    const enrollments = JSON.parse(localStorage.getItem('langford_enrollments') || '[]');
+    const enrollments = getEnrollments();
     if (course && enrollments.includes(course.id)) {
       setIsEnrolled(true);
     }
@@ -26,18 +27,14 @@ const CourseDetail: React.FC = () => {
   if (!course) return <div className="p-10 text-center font-bold">Curso no encontrado</div>;
 
   const handleEnrollClick = () => {
-    const userStr = localStorage.getItem('langford_user');
-    if (!userStr) {
+    const user = getStoredUser();
+    if (!user) {
       navigate('/login');
       return;
     }
 
-    const enrollments = JSON.parse(localStorage.getItem('langford_enrollments') || '[]');
-    if (!enrollments.includes(course.id)) {
-      enrollments.push(course.id);
-      localStorage.setItem('langford_enrollments', JSON.stringify(enrollments));
-      setIsEnrolled(true);
-    }
+    addEnrollment(course.id);
+    setIsEnrolled(true);
 
     if (course.price > 0) {
       setIsPSEOpen(true);
@@ -186,7 +183,7 @@ const CourseDetail: React.FC = () => {
 
              <div className="bg-[#d4af37]/10 p-10 rounded-[40px] border border-[#d4af37]/30 text-center">
                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Certificación Oficial</p>
-                <p className="text-4xl font-black text-gray-900 mb-6">$150.000<span className="text-sm text-gray-500">/cop</span></p>
+                <p className="text-4xl font-black text-gray-900 mb-6">${course.certificatePrice.toLocaleString('es-CO')}<span className="text-sm text-gray-500">/cop</span></p>
                 <p className="text-xs text-gray-600 font-medium mb-8 leading-relaxed">Válido para perfiles de LinkedIn y hojas de vida internacionales.</p>
                 <button 
                   onClick={handleEnrollClick}

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { setStoredUser } from '../services/storage';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Register: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Simular guardado
-    localStorage.setItem('langford_user', JSON.stringify({ ...formData, isLoggedIn: true }));
+    setStoredUser({ ...formData, isLoggedIn: true });
     navigate('/dashboard');
   };
 

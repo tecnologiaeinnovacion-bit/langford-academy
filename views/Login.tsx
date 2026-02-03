@@ -1,12 +1,19 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { setStoredUser } from '../services/storage';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    localStorage.setItem('langford_user', JSON.stringify({ name: 'Usuario Prueba', isLoggedIn: true }));
+    setStoredUser({
+      name: 'Usuario Prueba',
+      email: 'usuario@langford.test',
+      phone: '+57 300 000 0000',
+      country: 'Colombia',
+      isLoggedIn: true
+    });
     navigate('/dashboard');
   };
 

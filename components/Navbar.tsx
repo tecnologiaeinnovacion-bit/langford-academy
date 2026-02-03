@@ -1,15 +1,15 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { clearStoredUser, getStoredUser } from '../services/storage';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const userStr = localStorage.getItem('langford_user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  const user = getStoredUser();
   
   const handleLogout = () => {
-    localStorage.removeItem('langford_user');
-    window.location.href = '/';
+    clearStoredUser();
+    navigate('/');
   };
 
   return (

@@ -1,5 +1,6 @@
 
 import { Course } from './types';
+import { safeParse, getStoredCoursesRaw, setStoredCoursesRaw } from './services/storage';
 
 export const INITIAL_COURSES_DATA: Course[] = [
   {
@@ -34,13 +35,11 @@ export const INITIAL_COURSES_DATA: Course[] = [
 ];
 
 export const getStoredCourses = (): Course[] => {
-  const stored = localStorage.getItem('langford_courses');
-  if (stored) return JSON.parse(stored);
-  localStorage.setItem('langford_courses', JSON.stringify(INITIAL_COURSES_DATA));
+  const stored = getStoredCoursesRaw();
+  if (stored) return safeParse<Course[]>(stored, INITIAL_COURSES_DATA);
+  setStoredCoursesRaw(JSON.stringify(INITIAL_COURSES_DATA));
   return INITIAL_COURSES_DATA;
 };
-
-export const INITIAL_COURSES = getStoredCourses();
 
 export const TESTIMONIALS = [
   { name: 'Andrea Ruiz', role: 'Data Scientist en Google', text: 'Langford cambió mi carrera. La certificación es reconocida globalmente.' },

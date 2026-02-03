@@ -6,6 +6,7 @@ import { Lesson } from '../types';
 import AIAssistant from '../components/AIAssistant';
 import Evaluation from '../components/Evaluation';
 import PSEModal from '../components/PSEModal';
+import { getCertificateStatus, getCourseProgress, setCertificateStatus, setCourseProgress } from '../services/storage';
 
 const CoursePlayer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,8 @@ const CoursePlayer: React.FC = () => {
 
   useEffect(() => {
     if (course) {
+      setCompletedLessons(getCourseProgress(course.id));
+      setIsCertificatePaid(getCertificateStatus(course.id));
       // Si hay una lección en la URL, seleccionarla. Si no, la primera del curso.
       let foundLesson: Lesson | undefined;
       if (startLessonId) {
@@ -43,9 +46,12 @@ const CoursePlayer: React.FC = () => {
   if (!course) return <div className="p-20 text-center font-bold">Curso no disponible</div>;
 
   const toggleComplete = (lessonId: string) => {
-    setCompletedLessons(prev => 
-      prev.includes(lessonId) ? prev.filter(lid => lid !== lessonId) : [...prev, lessonId]
-    );
+    if (!course || !lessonId) return;
+    setCompletedLessons(prev => {
+      const updated = prev.includes(lessonId) ? prev.filter(lid => lid !== lessonId) : [...prev, lessonId];
+      setCourseProgress(course.id, updated);
+      return updated;
+    });
   };
 
   const totalLessonsCount = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
@@ -147,7 +153,7 @@ const CoursePlayer: React.FC = () => {
                    onClick={() => setIsPSEOpen(true)}
                    className="bg-black text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all uppercase tracking-widest shadow-xl"
                  >
-                   Obtener Certificación Oficial ($150.000 COP)
+                   Obtener Certificación Oficial (${course.certificatePrice.toLocaleString('es-CO')} COP)
                  </button>
                )}
             </div>
@@ -195,9 +201,12 @@ const CoursePlayer: React.FC = () => {
       <PSEModal 
         isOpen={isPSEOpen} 
         onClose={() => setIsPSEOpen(false)} 
-        amount={150000}
+        amount={course.certificatePrice}
         courseTitle={`Certificación Langford: ${course.title}`}
-        onSuccess={() => setIsCertificatePaid(true)}
+        onSuccess={() => {
+          setIsCertificatePaid(true);
+          setCertificateStatus(course.id, true);
+        }}
       />
       <AIAssistant courseContext={course.longDescription} />
     </div>
