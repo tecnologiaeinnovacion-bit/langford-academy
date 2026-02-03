@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { setStoredUser } from '../services/storage';
+import { findUserByEmail, setStoredUser, upsertUser } from '../services/storage';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -12,11 +12,28 @@ const Register: React.FC = () => {
     country: 'Colombia',
     password: ''
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simular guardado
-    setStoredUser({ ...formData, isLoggedIn: true });
+    setErrorMessage('');
+    const existing = findUserByEmail(formData.email);
+    if (existing && existing.provider !== 'google') {
+      setErrorMessage('Ya existe una cuenta con este correo. Inicia sesión.');
+      return;
+    }
+    const userRecord = {
+      id: existing?.id ?? `user-${Date.now()}`,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      country: formData.country,
+      password: formData.password,
+      provider: 'local' as const,
+      isLoggedIn: true
+    };
+    upsertUser(userRecord);
+    setStoredUser(userRecord);
     navigate('/dashboard');
   };
 
@@ -89,6 +106,12 @@ const Register: React.FC = () => {
                 onChange={e => setFormData({...formData, password: e.target.value})}
               />
             </div>
+
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-100 text-red-600 text-sm font-semibold rounded-xl px-4 py-3">
+                {errorMessage}
+              </div>
+            )}
 
             <button type="submit" className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-black text-white bg-blue-700 hover:bg-blue-800 focus:outline-none transition-all">
               Registrarme

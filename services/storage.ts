@@ -5,7 +5,9 @@ const STORAGE_KEYS = {
   courses: 'langford_courses',
   enrollments: 'langford_enrollments',
   progress: 'langford_progress',
-  certificates: 'langford_certificates'
+  certificates: 'langford_certificates',
+  users: 'langford_users',
+  certificateRecords: 'langford_certificate_records'
 };
 
 export const safeParse = <T>(value: string | null, fallback: T): T => {
@@ -27,7 +29,10 @@ export const getStoredUser = (): User | null => {
     email: stored.email ?? '',
     phone: stored.phone ?? '',
     country: stored.country ?? '',
-    isLoggedIn: stored.isLoggedIn ?? true
+    provider: stored.provider,
+    password: stored.password,
+    isLoggedIn: stored.isLoggedIn ?? true,
+    id: stored.id
   };
 };
 
@@ -72,6 +77,47 @@ export const setCertificateStatus = (courseId: string, value: boolean) => {
   const statusMap = safeParse<Record<string, boolean>>(localStorage.getItem(STORAGE_KEYS.certificates), {});
   statusMap[courseId] = value;
   localStorage.setItem(STORAGE_KEYS.certificates, JSON.stringify(statusMap));
+};
+
+export interface CertificateRecord {
+  courseId: string;
+  issuedAt: string;
+  certificateId: string;
+}
+
+export const getCertificateRecord = (courseId: string): CertificateRecord | null => {
+  const recordMap = safeParse<Record<string, CertificateRecord>>(localStorage.getItem(STORAGE_KEYS.certificateRecords), {});
+  return recordMap[courseId] ?? null;
+};
+
+export const setCertificateRecord = (record: CertificateRecord) => {
+  const recordMap = safeParse<Record<string, CertificateRecord>>(localStorage.getItem(STORAGE_KEYS.certificateRecords), {});
+  recordMap[record.courseId] = record;
+  localStorage.setItem(STORAGE_KEYS.certificateRecords, JSON.stringify(recordMap));
+};
+
+export const getStoredUsers = (): User[] => {
+  return safeParse<User[]>(localStorage.getItem(STORAGE_KEYS.users), []);
+};
+
+export const setStoredUsers = (users: User[]) => {
+  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+};
+
+export const upsertUser = (user: User) => {
+  const users = getStoredUsers();
+  const existingIndex = users.findIndex(existing => existing.email.toLowerCase() === user.email.toLowerCase());
+  if (existingIndex >= 0) {
+    users[existingIndex] = { ...users[existingIndex], ...user };
+  } else {
+    users.push(user);
+  }
+  setStoredUsers(users);
+};
+
+export const findUserByEmail = (email: string): User | null => {
+  const users = getStoredUsers();
+  return users.find(user => user.email.toLowerCase() === email.toLowerCase()) ?? null;
 };
 
 export const getStoredCoursesRaw = () => {

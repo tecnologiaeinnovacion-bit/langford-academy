@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { getStoredCourses } from '../constants';
 import { Lesson } from '../types';
 import AIAssistant from '../components/AIAssistant';
 import Evaluation from '../components/Evaluation';
 import PSEModal from '../components/PSEModal';
-import { getCertificateStatus, getCourseProgress, setCertificateStatus, setCourseProgress } from '../services/storage';
+import { getCertificateRecord, getCertificateStatus, getCourseProgress, getStoredUser, setCertificateRecord, setCertificateStatus, setCourseProgress } from '../services/storage';
 
 const CoursePlayer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,16 +16,20 @@ const CoursePlayer: React.FC = () => {
 
   const courses = getStoredCourses();
   const course = courses.find(c => c.id === id);
+  const user = getStoredUser();
   
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [isPSEOpen, setIsPSEOpen] = useState(false);
   const [isCertificatePaid, setIsCertificatePaid] = useState(false);
+  const [certificateId, setCertificateId] = useState<string | null>(null);
 
   useEffect(() => {
     if (course) {
       setCompletedLessons(getCourseProgress(course.id));
       setIsCertificatePaid(getCertificateStatus(course.id));
+      const record = getCertificateRecord(course.id);
+      setCertificateId(record?.certificateId ?? null);
       // Si hay una lección en la URL, seleccionarla. Si no, la primera del curso.
       let foundLesson: Lesson | undefined;
       if (startLessonId) {
@@ -43,6 +47,17 @@ const CoursePlayer: React.FC = () => {
     }
   }, [course, startLessonId]);
 
+  useEffect(() => {
+    if (!course || !isCertificatePaid || certificateId) return;
+    const recordId = `CERT-${course.id}-${Date.now()}`;
+    setCertificateId(recordId);
+    setCertificateRecord({
+      courseId: course.id,
+      certificateId: recordId,
+      issuedAt: new Date().toISOString()
+    });
+  }, [certificateId, course, isCertificatePaid]);
+
   if (!course) return <div className="p-20 text-center font-bold">Curso no disponible</div>;
 
   const toggleComplete = (lessonId: string) => {
@@ -56,6 +71,33 @@ const CoursePlayer: React.FC = () => {
 
   const totalLessonsCount = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const progressPercent = totalLessonsCount > 0 ? Math.round((completedLessons.length / totalLessonsCount) * 100) : 0;
+
+  const certificateDownloadUrl = useMemo(() => {
+    if (!isCertificatePaid || !user) return null;
+    const record = getCertificateRecord(course.id);
+    const issuedAt = record?.issuedAt ?? new Date().toISOString();
+    const certificateCode = certificateId || record?.certificateId || `CERT-${course.id}-${Date.now()}`;
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850">
+        <defs>
+          <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#0b0b0b"/>
+            <stop offset="100%" stop-color="#1a1a1a"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bg)"/>
+        <rect x="60" y="60" width="1080" height="730" fill="none" stroke="#d4af37" stroke-width="6" rx="32"/>
+        <text x="600" y="170" text-anchor="middle" font-family="Arial" font-size="44" fill="#d4af37" letter-spacing="6">LANGFORD ACADEMY</text>
+        <text x="600" y="250" text-anchor="middle" font-family="Arial" font-size="28" fill="#ffffff" letter-spacing="2">CERTIFICADO DE FINALIZACIÓN</text>
+        <text x="600" y="360" text-anchor="middle" font-family="Georgia" font-size="54" fill="#ffffff">${user.name}</text>
+        <text x="600" y="430" text-anchor="middle" font-family="Arial" font-size="26" fill="#c9c9c9">ha completado satisfactoriamente el programa</text>
+        <text x="600" y="490" text-anchor="middle" font-family="Arial" font-size="36" fill="#d4af37">${course.title}</text>
+        <text x="600" y="590" text-anchor="middle" font-family="Arial" font-size="18" fill="#9b9b9b">Código: ${certificateCode}</text>
+        <text x="600" y="620" text-anchor="middle" font-family="Arial" font-size="18" fill="#9b9b9b">Emitido: ${new Date(issuedAt).toLocaleDateString('es-CO')}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }, [certificateId, course.id, course.title, isCertificatePaid, user]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-[#0a0a0a]">
@@ -101,6 +143,42 @@ const CoursePlayer: React.FC = () => {
                   <div className="w-full h-full bg-white flex flex-col items-center justify-center">
                     <Evaluation questions={currentLesson.evaluation || []} onComplete={(score) => score >= 70 && toggleComplete(currentLesson.id)} />
                   </div>
+                ) : currentLesson?.type === 'link' ? (
+                  <div className="w-full h-full bg-white p-16 flex flex-col items-center justify-center text-center">
+                    <i className="fas fa-link text-5xl text-[#d4af37] mb-6"></i>
+                    <h2 className="text-3xl font-black mb-4">{currentLesson.title}</h2>
+                    <p className="text-gray-600 mb-8">Abre este recurso externo en una nueva pestaña.</p>
+                    {currentLesson.externalLink ? (
+                      <a
+                        href={currentLesson.externalLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-[#00255d] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
+                      >
+                        Abrir recurso
+                      </a>
+                    ) : (
+                      <p className="text-gray-400 italic">No hay enlace disponible para este recurso.</p>
+                    )}
+                  </div>
+                ) : currentLesson?.type === 'file' ? (
+                  <div className="w-full h-full bg-white p-16 flex flex-col items-center justify-center text-center">
+                    <i className="fas fa-file-download text-5xl text-[#d4af37] mb-6"></i>
+                    <h2 className="text-3xl font-black mb-4">{currentLesson.title}</h2>
+                    <p className="text-gray-600 mb-8">Descarga el archivo complementario del curso.</p>
+                    {currentLesson.fileUrl ? (
+                      <a
+                        href={currentLesson.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-[#00255d] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
+                      >
+                        Descargar archivo
+                      </a>
+                    ) : (
+                      <p className="text-gray-400 italic">No hay archivo disponible para este recurso.</p>
+                    )}
+                  </div>
                 ) : (
                   <div className="w-full h-full bg-white p-20 overflow-y-auto text-black font-medium text-lg leading-relaxed">
                     <h2 className="text-4xl font-black mb-12 border-b-8 border-[#d4af37] inline-block">{currentLesson?.title}</h2>
@@ -143,10 +221,14 @@ const CoursePlayer: React.FC = () => {
                {isCertificatePaid ? (
                  <div className="space-y-6">
                    <p className="font-black text-green-700 flex items-center justify-center"><i className="fas fa-shield-alt mr-2"></i> PAGO VERIFICADO EXITOSAMENTE</p>
-                   <button className="bg-black text-[#d4af37] px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all flex items-center mx-auto space-x-4">
+                   <a
+                     href={certificateDownloadUrl ?? undefined}
+                     download={`Certificado-${course.title}.svg`}
+                     className="bg-black text-[#d4af37] px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all flex items-center mx-auto space-x-4"
+                   >
                      <i className="fas fa-download"></i>
                      <span>DESCARGAR CERTIFICADO ELITE</span>
-                   </button>
+                   </a>
                  </div>
                ) : (
                  <button 
@@ -183,7 +265,7 @@ const CoursePlayer: React.FC = () => {
                       {completedLessons.includes(lesson.id) ? (
                         <i className="fas fa-check-circle text-green-500 text-xl"></i>
                       ) : (
-                        <i className={`fas ${lesson.type === 'video' ? 'fa-play-circle' : 'fa-file-alt'} text-gray-700 text-xl`}></i>
+                        <i className={`fas ${lesson.type === 'video' ? 'fa-play-circle' : lesson.type === 'quiz' ? 'fa-pen-to-square' : lesson.type === 'link' ? 'fa-link' : lesson.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-gray-700 text-xl`}></i>
                       )}
                     </div>
                     <div className="flex-1">
@@ -204,8 +286,15 @@ const CoursePlayer: React.FC = () => {
         amount={course.certificatePrice}
         courseTitle={`Certificación Langford: ${course.title}`}
         onSuccess={() => {
+          const recordId = certificateId || `CERT-${course.id}-${Date.now()}`;
           setIsCertificatePaid(true);
           setCertificateStatus(course.id, true);
+          setCertificateId(recordId);
+          setCertificateRecord({
+            courseId: course.id,
+            certificateId: recordId,
+            issuedAt: new Date().toISOString()
+          });
         }}
       />
       <AIAssistant courseContext={course.longDescription} />

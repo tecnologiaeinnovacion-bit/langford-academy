@@ -1,19 +1,46 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { setStoredUser } from '../services/storage';
+import { findUserByEmail, setStoredUser, upsertUser } from '../services/storage';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = () => {
-    setStoredUser({
-      name: 'Usuario Prueba',
-      email: 'usuario@langford.test',
-      phone: '+57 300 000 0000',
+    setErrorMessage('');
+    const user = findUserByEmail(email);
+    if (!user || user.provider === 'google') {
+      setErrorMessage('No encontramos una cuenta con ese correo. Regístrate o usa Google.');
+      return;
+    }
+    if (!user.password || user.password !== password) {
+      setErrorMessage('La contraseña no es correcta. Intenta nuevamente.');
+      return;
+    }
+    setStoredUser({ ...user, isLoggedIn: true });
+    navigate('/dashboard');
+  };
+
+  const handleGoogleLogin = () => {
+    setErrorMessage('');
+    const emailPrompt = window.prompt('Ingresa tu correo de Google');
+    if (!emailPrompt) return;
+    const namePrompt = window.prompt('Ingresa tu nombre y apellido');
+    const nameValue = namePrompt || 'Usuario Google';
+    const user = {
+      id: `google-${Date.now()}`,
+      name: nameValue,
+      email: emailPrompt,
+      phone: '',
       country: 'Colombia',
+      provider: 'google' as const,
       isLoggedIn: true
-    });
+    };
+    upsertUser(user);
+    setStoredUser(user);
     navigate('/dashboard');
   };
 
@@ -26,11 +53,36 @@ const Login: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-2xl rounded-3xl sm:px-10 border border-gray-100">
-          <div className="space-y-6">
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-bold text-gray-700">Correo electrónico</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="mt-2 block w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-700 outline-none"
+                placeholder="tucorreo@ejemplo.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700">Contraseña</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="mt-2 block w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-700 outline-none"
+                placeholder="••••••••"
+              />
+            </div>
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-100 text-red-600 text-sm font-semibold rounded-xl px-4 py-3">
+                {errorMessage}
+              </div>
+            )}
             <button onClick={handleLogin} className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-black text-white bg-blue-700 hover:bg-blue-800 transition-all">
               Ingresar con mi cuenta
             </button>
-            <button className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
+            <button onClick={handleGoogleLogin} className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
               <img src="https://www.gstatic.com/images/branding/product/1x/gsa_48dp.png" alt="Google" className="h-5 w-5 mr-3" />
               Continuar con Google
             </button>

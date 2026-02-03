@@ -138,7 +138,7 @@ const CourseDetail: React.FC = () => {
                           >
                             <div className="flex items-center space-x-4">
                               <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 group-hover/lesson:bg-[#d4af37]/10 group-hover/lesson:text-[#d4af37] transition-all">
-                                <i className={`fas ${lesson.type === 'video' ? 'fa-play' : 'fa-file-alt'} text-xs`}></i>
+                                <i className={`fas ${lesson.type === 'video' ? 'fa-play' : lesson.type === 'quiz' ? 'fa-pen-to-square' : lesson.type === 'link' ? 'fa-link' : lesson.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-xs`}></i>
                               </div>
                               <div className="text-left">
                                 <p className="font-bold text-gray-800 text-sm group-hover/lesson:text-[#d4af37] transition-colors">{lesson.title}</p>
