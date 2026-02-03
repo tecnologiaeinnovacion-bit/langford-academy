@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { INITIAL_COURSES, TESTIMONIALS, PARTNERS } from '../constants';
+import { getStoredCourses, TESTIMONIALS, PARTNERS } from '../constants';
 import CourseCard from '../components/CourseCard';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const courses = INITIAL_COURSES;
+  const courses = getStoredCourses();
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">

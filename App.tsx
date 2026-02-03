@@ -10,6 +10,9 @@ import Register from './views/Register';
 import Login from './views/Login';
 import AdminLogin from './views/AdminLogin';
 import AdminDashboard from './views/AdminDashboard';
+import Atencion from './views/Atencion';
+import Direccion from './views/Direccion';
+import DatosBasicos from './views/DatosBasicos';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -28,6 +31,9 @@ const App: React.FC = () => {
           <Route path="/learn/:id" element={<CoursePlayer />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/atencion" element={<Atencion />} />
+          <Route path="/direccion" element={<Direccion />} />
+          <Route path="/datos-basicos" element={<DatosBasicos />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLogin />} />
@@ -53,8 +59,9 @@ const App: React.FC = () => {
             <div>
                <h5 className="font-black text-xs uppercase tracking-widest text-[#d4af37] mb-6">Soporte</h5>
                <ul className="space-y-4 text-gray-400 text-sm font-bold">
-                 <li><a href="#" className="hover:text-white transition-colors">Tutoría IA</a></li>
-                 <li><a href="#" className="hover:text-white transition-colors">Centro de Ayuda</a></li>
+                 <li><Link to="/atencion" className="hover:text-white transition-colors">Atención al Estudiante</Link></li>
+                 <li><Link to="/direccion" className="hover:text-white transition-colors">Dirección</Link></li>
+                 <li><Link to="/datos-basicos" className="hover:text-white transition-colors">Datos Básicos</Link></li>
                  <li><Link to="/admin" className="text-gray-800 hover:text-gray-600 transition-colors">Staff Portal</Link></li>
                </ul>
             </div>

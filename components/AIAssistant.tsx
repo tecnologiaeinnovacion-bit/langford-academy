@@ -39,6 +39,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ courseContext }) => {
     setIsLoading(false);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[60]">
       {isOpen ? (
@@ -87,7 +94,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ courseContext }) => {
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={handleKeyDown}
                 placeholder="Escribe tu duda académica..." 
                 className="flex-1 border border-gray-200 rounded-xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 bg-gray-50 font-medium"
               />

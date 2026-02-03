@@ -1,31 +1,35 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface PSEModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
   courseTitle: string;
-  onSuccess: () => void;
+  paymentUrl: string;
+  returnUrl: string;
 }
 
-const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitle, onSuccess }) => {
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitle, paymentUrl, returnUrl }) => {
+  const [fullName, setFullName] = useState('');
+  const [documentId, setDocumentId] = useState('');
+  const [email, setEmail] = useState('');
 
   if (!isOpen) return null;
 
-  const handlePay = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setStep(3);
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 2000);
-    }, 2500);
-  };
+  const paymentLink = useMemo(() => {
+    const params = new URLSearchParams({
+      amount: amount.toString(),
+      reference: courseTitle,
+      return_url: returnUrl,
+      full_name: fullName,
+      document_id: documentId,
+      email
+    });
+    return `${paymentUrl}?${params.toString()}`;
+  }, [amount, courseTitle, documentId, email, fullName, paymentUrl, returnUrl]);
+
+  const isReadyToPay = Boolean(fullName && documentId && email);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -41,79 +45,66 @@ const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitl
         </div>
 
         <div className="p-8">
-          {step === 1 && (
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Concepto</p>
-                <p className="font-bold text-gray-800">{courseTitle}</p>
-                <div className="flex justify-between mt-4 border-t pt-2">
-                  <span className="text-gray-600">Total a pagar:</span>
-                  <span className="font-black text-blue-700">${amount.toLocaleString('es-CO')} COP</span>
-                </div>
+          <div className="space-y-6">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <p className="text-xs text-gray-500 uppercase font-bold mb-1">Concepto</p>
+              <p className="font-bold text-gray-800">{courseTitle}</p>
+              <div className="flex justify-between mt-4 border-t pt-2">
+                <span className="text-gray-600">Total a pagar:</span>
+                <span className="font-black text-blue-700">${amount.toLocaleString('es-CO')} COP</span>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Selecciona tu Banco</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option>Bancolombia</option>
-                    <option>Banco de Bogotá</option>
-                    <option>Davivienda</option>
-                    <option>Nequi</option>
-                    <option>Daviplata</option>
-                    <option>BBVA</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Correo registrado en PSE</label>
-                  <input type="email" placeholder="ejemplo@correo.com" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Nombre completo</label>
+                <input
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Nombre y apellido"
+                  type="text"
+                />
               </div>
-
-              <button 
-                onClick={() => setStep(2)}
-                className="w-full bg-blue-700 text-white font-bold py-4 rounded-xl hover:bg-blue-800 transition-all shadow-lg shadow-blue-200"
-              >
-                Continuar con el pago
-              </button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="text-center py-10">
-              {loading ? (
-                <div className="space-y-6">
-                  <div className="inline-block w-16 h-16 border-4 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="font-bold text-gray-700">Redirigiendo a tu sucursal bancaria...</p>
-                  <p className="text-xs text-gray-400">Por favor, no cierres esta ventana.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="w-20 h-20 bg-blue-50 text-blue-700 rounded-full flex items-center justify-center mx-auto text-3xl">
-                    <i className="fas fa-university"></i>
-                  </div>
-                  <h3 className="text-xl font-bold">Autorización de Pago</h3>
-                  <p className="text-gray-600 text-sm">Al hacer clic, simularemos la aprobación de tu banco.</p>
-                  <button 
-                    onClick={handlePay}
-                    className="w-full bg-blue-700 text-white font-bold py-4 rounded-xl hover:bg-blue-800"
-                  >
-                    Simular Aprobación Bancaria
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="text-center py-10 animate-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl mb-6">
-                <i className="fas fa-check"></i>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Cédula / Documento</label>
+                <input
+                  value={documentId}
+                  onChange={(event) => setDocumentId(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Número de documento"
+                  type="text"
+                />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Pago Exitoso!</h3>
-              <p className="text-gray-600">Tu inscripción a <strong>{courseTitle}</strong> se ha procesado correctamente.</p>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Correo electrónico</label>
+                <input
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="nombre@correo.com"
+                  type="email"
+                />
+              </div>
             </div>
-          )}
+
+            <div className="text-sm text-gray-600 leading-relaxed">
+              Serás redirigido a la pasarela PSE para completar el pago. Al finalizar, regresarás a la plataforma para habilitar tu certificado.
+            </div>
+
+            <a
+              href={paymentLink}
+              className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg inline-flex items-center justify-center ${isReadyToPay ? 'bg-blue-700 text-white hover:bg-blue-800 shadow-blue-200' : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'}`}
+              aria-disabled={!isReadyToPay}
+              onClick={(event) => {
+                if (!isReadyToPay) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              Ir a PSE y pagar
+            </a>
+          </div>
         </div>
       </div>
     </div>

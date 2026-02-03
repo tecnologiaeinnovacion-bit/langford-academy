@@ -3,15 +3,15 @@ import React from 'react';
 import { getStoredCourses } from '../constants';
 import CourseCard from '../components/CourseCard';
 import { useNavigate } from 'react-router-dom';
+import { getStoredUser, getEnrollments, getCourseProgress } from '../services/storage';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const userStr = localStorage.getItem('langford_user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  const user = getStoredUser();
   const allCourses = getStoredCourses();
   
   // Obtener IDs de cursos inscritos
-  const enrollmentIds = JSON.parse(localStorage.getItem('langford_enrollments') || '[]');
+  const enrollmentIds = getEnrollments();
   const enrolledCourses = allCourses.filter(c => enrollmentIds.includes(c.id));
   const otherCourses = allCourses.filter(c => !enrollmentIds.includes(c.id));
 
@@ -43,16 +43,22 @@ const Dashboard: React.FC = () => {
               <h2 className="text-2xl font-black uppercase tracking-widest text-gray-400 mb-8">Mis Cursos Activos</h2>
               {enrolledCourses.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {enrolledCourses.map(c => (
-                    <div key={c.id} className="bg-[#111] p-2 rounded-[32px] border border-white/5">
-                      <CourseCard course={c} enrolled progress={45} />
-                    </div>
-                  ))}
+                  {enrolledCourses.map(c => {
+                    const completedLessons = getCourseProgress(c.id);
+                    const totalLessons = c.modules.reduce((acc, m) => acc + m.lessons.length, 0);
+                    const progress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
+
+                    return (
+                      <div key={c.id} className="bg-[#111] p-2 rounded-[32px] border border-white/5">
+                        <CourseCard course={c} enrolled progress={progress} />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="bg-white/5 p-10 rounded-3xl border border-dashed border-white/10 text-center">
                    <p className="text-gray-500 mb-6">Aún no te has inscrito en ningún programa.</p>
-                   <button onClick={() => window.scrollTo(0, 1000)} className="text-[#d4af37] font-black uppercase text-xs">Explorar Catálogo</button>
+                   <button onClick={() => navigate('/')} className="text-[#d4af37] font-black uppercase text-xs">Explorar Catálogo</button>
                 </div>
               )}
             </section>
