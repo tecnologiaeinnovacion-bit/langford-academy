@@ -48,9 +48,12 @@ export interface Course {
 }
 
 export interface User {
+  id?: string;
   name: string;
   email: string;
   phone: string;
   country: string;
+  provider?: 'local' | 'google';
+  password?: string;
   isLoggedIn: boolean;
 }
