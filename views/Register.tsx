@@ -124,11 +124,8 @@ const Register: React.FC = () => {
               <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500 font-bold uppercase tracking-widest text-[10px]">O continuar con</span></div>
             </div>
 
-            <div className="mt-6">
-              <button className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_48dp.png" alt="Google" className="h-5 w-5 mr-3" />
-                Google
-              </button>
+            <div className="mt-6 text-center text-xs text-gray-500">
+              ¿Prefieres Google? <Link to="/login" className="text-blue-700 font-bold">Ingresa aquí</Link>
             </div>
           </div>
         </div>

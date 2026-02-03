@@ -1,13 +1,61 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { findUserByEmail, setStoredUser, upsertUser } from '../services/storage';
+import { initGoogleSignIn } from '../services/googleAuth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleError, setGoogleError] = useState('');
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  const handleGoogleProfile = (profile: { name: string; email: string }) => {
+    const user = {
+      id: `google-${Date.now()}`,
+      name: profile.name || 'Usuario Google',
+      email: profile.email,
+      phone: '',
+      country: 'Colombia',
+      provider: 'google' as const,
+      isLoggedIn: true
+    };
+    upsertUser(user);
+    setStoredUser(user);
+    navigate('/dashboard');
+  };
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId) {
+      setGoogleError('Configura VITE_GOOGLE_CLIENT_ID para habilitar Google.');
+      return;
+    }
+    if (!googleButtonRef.current) return;
+
+    const existingScript = document.querySelector<HTMLScriptElement>('script[data-google-identity]');
+    if (existingScript) {
+      initGoogleSignIn(googleButtonRef.current, clientId, handleGoogleProfile, setErrorMessage);
+      setGoogleReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleIdentity = 'true';
+    script.onload = () => {
+      if (!googleButtonRef.current) return;
+      initGoogleSignIn(googleButtonRef.current, clientId, handleGoogleProfile, setErrorMessage);
+      setGoogleReady(true);
+    };
+    script.onerror = () => setGoogleError('No se pudo cargar el acceso con Google.');
+    document.body.appendChild(script);
+  }, []);
 
   const handleLogin = () => {
     setErrorMessage('');
@@ -21,26 +69,6 @@ const Login: React.FC = () => {
       return;
     }
     setStoredUser({ ...user, isLoggedIn: true });
-    navigate('/dashboard');
-  };
-
-  const handleGoogleLogin = () => {
-    setErrorMessage('');
-    const emailPrompt = window.prompt('Ingresa tu correo de Google');
-    if (!emailPrompt) return;
-    const namePrompt = window.prompt('Ingresa tu nombre y apellido');
-    const nameValue = namePrompt || 'Usuario Google';
-    const user = {
-      id: `google-${Date.now()}`,
-      name: nameValue,
-      email: emailPrompt,
-      phone: '',
-      country: 'Colombia',
-      provider: 'google' as const,
-      isLoggedIn: true
-    };
-    upsertUser(user);
-    setStoredUser(user);
     navigate('/dashboard');
   };
 
@@ -82,10 +110,12 @@ const Login: React.FC = () => {
             <button onClick={handleLogin} className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-black text-white bg-blue-700 hover:bg-blue-800 transition-all">
               Ingresar con mi cuenta
             </button>
-            <button onClick={handleGoogleLogin} className="w-full inline-flex justify-center py-3 px-4 rounded-xl border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
-              <img src="https://www.gstatic.com/images/branding/product/1x/gsa_48dp.png" alt="Google" className="h-5 w-5 mr-3" />
-              Continuar con Google
-            </button>
+            <div ref={googleButtonRef} className="flex justify-center"></div>
+            {!googleReady && (
+              <div className="text-xs text-gray-500 text-center">
+                {googleError || 'Cargando acceso con Google...'}
+              </div>
+            )}
           </div>
           <p className="mt-6 text-center text-xs text-gray-500">
             ¿No tienes cuenta? <Link to="/register" className="text-blue-700 font-black">Regístrate gratis</Link>
