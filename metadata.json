@@ -1,0 +1,8 @@
+{
+  "name": "Langford Academy",
+  "description": "Plataforma líder de aprendizaje online con cursos certificados, tutoría por IA y pagos seguros vía PSE.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
