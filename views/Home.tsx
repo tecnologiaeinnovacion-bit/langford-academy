@@ -1,12 +1,44 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { getStoredCourses, TESTIMONIALS, PARTNERS } from '../constants';
 import CourseCard from '../components/CourseCard';
 import { useNavigate } from 'react-router-dom';
+import { fetchSheetCsv } from '../services/sheets';
+
+type Testimonial = { name: string; role: string; text: string };
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const courses = getStoredCourses();
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(TESTIMONIALS);
+  const [sheetError, setSheetError] = useState('');
+
+  useEffect(() => {
+    const sheetUrl = import.meta.env.VITE_SHEETS_TESTIMONIALS_URL as string | undefined;
+    if (!sheetUrl) return;
+
+    const loadSheet = async () => {
+      try {
+        const rows = await fetchSheetCsv(sheetUrl);
+        const [, ...data] = rows;
+        const normalized = data
+          .filter((row) => row.length >= 3)
+          .map((row) => ({
+            name: row[0],
+            role: row[1],
+            text: row[2]
+          }));
+        if (normalized.length > 0) {
+          setTestimonials(normalized);
+        }
+      } catch (error) {
+        setSheetError('No fue posible sincronizar testimonios desde Sheets.');
+        console.error(error);
+      }
+    };
+
+    loadSheet();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -95,7 +127,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-center text-3xl font-black mb-16 uppercase tracking-widest text-gray-400">Voces de Nuestra Comunidad</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {TESTIMONIALS.map((t, i) => (
+            {testimonials.map((t, i) => (
               <div key={i} className="bg-[#0a0a0a] p-10 rounded-3xl border border-white/5 hover:border-[#d4af37]/20 transition-all">
                 <i className="fas fa-quote-left text-3xl text-[#d4af37] mb-6"></i>
                 <p className="text-xl text-gray-300 italic mb-8">"{t.text}"</p>
@@ -109,6 +141,9 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
+          {sheetError && (
+            <p className="text-center text-xs text-gray-500 mt-6">{sheetError}</p>
+          )}
         </div>
       </section>
     </div>
