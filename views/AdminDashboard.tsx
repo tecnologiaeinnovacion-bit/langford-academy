@@ -49,6 +49,62 @@ const AdminDashboard: React.FC = () => {
     setEditingLesson(null);
   };
 
+  const handleUpdateCourse = (courseId: string, field: keyof Course, value: string | number) => {
+    setCourses(prev => prev.map(course => {
+      if (course.id !== courseId) return course;
+      return {
+        ...course,
+        [field]: value
+      };
+    }));
+  };
+
+  const handleUpdateModuleTitle = (courseId: string, moduleId: string, value: string) => {
+    setCourses(prev => prev.map(course => {
+      if (course.id !== courseId) return course;
+      return {
+        ...course,
+        modules: course.modules.map(module => (
+          module.id === moduleId ? { ...module, title: value } : module
+        ))
+      };
+    }));
+  };
+
+  const moveModule = (courseId: string, moduleId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(course => {
+      if (course.id !== courseId) return course;
+      const index = course.modules.findIndex(module => module.id === moduleId);
+      if (index < 0) return course;
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= course.modules.length) return course;
+      const updated = [...course.modules];
+      const [removed] = updated.splice(index, 1);
+      updated.splice(targetIndex, 0, removed);
+      return { ...course, modules: updated };
+    }));
+  };
+
+  const moveLesson = (courseId: string, moduleId: string, lessonId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(course => {
+      if (course.id !== courseId) return course;
+      return {
+        ...course,
+        modules: course.modules.map(module => {
+          if (module.id !== moduleId) return module;
+          const index = module.lessons.findIndex(lesson => lesson.id === lessonId);
+          if (index < 0) return module;
+          const targetIndex = direction === 'up' ? index - 1 : index + 1;
+          if (targetIndex < 0 || targetIndex >= module.lessons.length) return module;
+          const updatedLessons = [...module.lessons];
+          const [removed] = updatedLessons.splice(index, 1);
+          updatedLessons.splice(targetIndex, 0, removed);
+          return { ...module, lessons: updatedLessons };
+        })
+      };
+    }));
+  };
+
   const handleLessonFieldChange = (field: keyof Lesson, value: string) => {
     if (!editingLesson) return;
     setEditingLesson({
@@ -227,6 +283,85 @@ const AdminDashboard: React.FC = () => {
 
               {activeCourseId === c.id && (
                 <div className="mt-8 border-t border-white/5 pt-8 space-y-8 animate-in slide-in-from-top-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 p-6 rounded-3xl border border-white/5">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Título</label>
+                      <input
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                        value={c.title}
+                        onChange={(e) => handleUpdateCourse(c.id, 'title', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Categoría</label>
+                      <input
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                        value={c.category}
+                        onChange={(e) => handleUpdateCourse(c.id, 'category', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Instructor</label>
+                      <input
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                        value={c.instructor}
+                        onChange={(e) => handleUpdateCourse(c.id, 'instructor', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Título Instructor</label>
+                      <input
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                        value={c.instructorTitle}
+                        onChange={(e) => handleUpdateCourse(c.id, 'instructorTitle', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Imagen URL</label>
+                      <input
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                        value={c.image}
+                        onChange={(e) => handleUpdateCourse(c.id, 'image', e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Precio</label>
+                        <input
+                          type="number"
+                          className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                          value={c.price}
+                          onChange={(e) => handleUpdateCourse(c.id, 'price', Number(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Certificado</label>
+                        <input
+                          type="number"
+                          className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none"
+                          value={c.certificatePrice}
+                          onChange={(e) => handleUpdateCourse(c.id, 'certificatePrice', Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Descripción</label>
+                      <textarea
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none h-24"
+                        value={c.description}
+                        onChange={(e) => handleUpdateCourse(c.id, 'description', e.target.value)}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Descripción larga</label>
+                      <textarea
+                        className="mt-2 w-full bg-white/5 p-3 rounded-xl outline-none h-28"
+                        value={c.longDescription}
+                        onChange={(e) => handleUpdateCourse(c.id, 'longDescription', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex justify-between items-center">
                     <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest">Currículo</h4>
                     <button onClick={() => addModule(c.id)} className="text-[#d4af37] text-xs font-black uppercase">Añadir Módulo</button>
@@ -234,7 +369,17 @@ const AdminDashboard: React.FC = () => {
                   {c.modules.map(m => (
                     <div key={m.id} className="bg-black/40 p-6 rounded-3xl border border-white/5">
                       <div className="flex justify-between items-center mb-6">
-                        <span className="font-bold text-white">{m.title}</span>
+                        <div className="flex-1">
+                          <input
+                            className="w-full bg-white/5 p-3 rounded-xl outline-none text-white font-bold"
+                            value={m.title}
+                            onChange={(e) => handleUpdateModuleTitle(c.id, m.id, e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <button onClick={() => moveModule(c.id, m.id, 'up')} className="text-[10px] bg-white/10 text-white px-3 py-1 rounded-lg">↑</button>
+                          <button onClick={() => moveModule(c.id, m.id, 'down')} className="text-[10px] bg-white/10 text-white px-3 py-1 rounded-lg">↓</button>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                            <button onClick={() => addLesson(c.id, m.id, 'video')} className="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg">+ Video</button>
                            <button onClick={() => addLesson(c.id, m.id, 'reading')} className="text-[10px] bg-green-500/10 text-green-400 px-3 py-1 rounded-lg">+ Lectura</button>
@@ -250,7 +395,11 @@ const AdminDashboard: React.FC = () => {
                                <i className={`fas ${l.type === 'video' ? 'fa-play' : l.type === 'quiz' ? 'fa-pen-to-square' : l.type === 'link' ? 'fa-link' : l.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-[#d4af37]`}></i>
                                <span className="font-bold">{l.title}</span>
                              </div>
-                             <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             <div className="flex items-center gap-2">
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'up')} className="text-xs text-gray-500 hover:text-white">↑</button>
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'down')} className="text-xs text-gray-500 hover:text-white">↓</button>
+                               <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             </div>
                           </div>
                         ))}
                       </div>
