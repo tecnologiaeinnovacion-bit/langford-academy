@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './views/Home';
@@ -13,12 +13,103 @@ import AdminDashboard from './views/AdminDashboard';
 import Atencion from './views/Atencion';
 import Direccion from './views/Direccion';
 import DatosBasicos from './views/DatosBasicos';
+import { fetchSheetCsv, mapSheetCourses } from './services/sheets';
+import { setStoredCoursesRaw } from './services/storage';
+import { Course } from './types';
 
 const App: React.FC = () => {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
   const isAuthView = ['/login', '/register'].includes(location.pathname);
   const isLearningView = location.pathname.startsWith('/learn/');
+
+  useEffect(() => {
+    const sheetUrl = import.meta.env.VITE_SHEETS_COURSES_URL as string | undefined;
+    if (!sheetUrl) return;
+
+    const loadCourses = async () => {
+      try {
+        const rows = await fetchSheetCsv(sheetUrl);
+        const entries = mapSheetCourses(rows);
+        if (entries.length === 0) return;
+
+        const coursesMap = new Map<string, Course>();
+        entries.forEach((entry) => {
+          const course = coursesMap.get(entry.courseId) || {
+            id: entry.courseId,
+            title: entry.courseTitle,
+            instructor: entry.instructor,
+            instructorTitle: entry.instructorTitle,
+            description: entry.description,
+            longDescription: entry.longDescription,
+            rating: 5.0,
+            reviewsCount: 0,
+            studentsCount: 0,
+            duration: '3 meses',
+            level: entry.level,
+            category: entry.category,
+            image: entry.image,
+            modules: [],
+            price: entry.price,
+            certificatePrice: entry.certificatePrice
+          };
+
+          const moduleIndex = course.modules.findIndex((module) => module.id === entry.moduleId);
+          const module =
+            moduleIndex >= 0
+              ? course.modules[moduleIndex]
+              : { id: entry.moduleId, title: entry.moduleTitle, lessons: [] };
+
+          if (!module.lessons.find((lesson) => lesson.id === entry.lessonId)) {
+            const lessonBase = {
+              id: entry.lessonId,
+              title: entry.lessonTitle,
+              duration: entry.lessonDuration,
+              type: entry.lessonType
+            };
+
+            if (entry.lessonType === 'video') {
+              module.lessons.push({ ...lessonBase, videoUrl: entry.lessonUrl });
+            } else if (entry.lessonType === 'reading') {
+              module.lessons.push({ ...lessonBase, content: entry.lessonContent });
+            } else if (entry.lessonType === 'link') {
+              module.lessons.push({ ...lessonBase, externalLink: entry.lessonUrl });
+            } else if (entry.lessonType === 'file') {
+              module.lessons.push({ ...lessonBase, fileUrl: entry.lessonUrl });
+            } else if (entry.lessonType === 'quiz') {
+              module.lessons.push({
+                ...lessonBase,
+                evaluation: [
+                  {
+                    id: `q-${entry.lessonId}`,
+                    question: entry.lessonContent || 'Pregunta',
+                    options: entry.lessonOptions.length ? entry.lessonOptions : ['Opción 1', 'Opción 2', 'Opción 3'],
+                    correctAnswer: entry.lessonCorrectAnswer
+                  }
+                ]
+              });
+            }
+          }
+
+          if (moduleIndex >= 0) {
+            course.modules[moduleIndex] = module;
+          } else {
+            course.modules.push(module);
+          }
+          coursesMap.set(entry.courseId, course);
+        });
+
+        const courses = Array.from(coursesMap.values());
+        if (courses.length > 0) {
+          setStoredCoursesRaw(JSON.stringify(courses));
+        }
+      } catch (error) {
+        console.error('No se pudo sincronizar cursos desde Sheets.', error);
+      }
+    };
+
+    loadCourses();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0a0a]">
