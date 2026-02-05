@@ -108,6 +108,15 @@ const CourseDetail: React.FC = () => {
               {paymentError && (
                 <p className="text-xs text-red-200 font-semibold">{paymentError}</p>
               )}
+              {course.price > 0 && (
+                <div className="text-left">
+                  <p className="text-[10px] uppercase tracking-widest font-black text-blue-100/70">Pago disponible</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-5" />
+                    <span className="text-xs font-bold text-cyan-100">Pasarela PSE segura</span>
+                  </div>
+                </div>
+              )}
               <div className="text-left">
                 <p className="text-cyan-400 font-black text-xl">{(course.studentsCount + 2450).toLocaleString()}</p>
                 <p className="text-[10px] text-blue-100/50 font-black uppercase tracking-widest">Estudiantes Activos</p>
@@ -201,6 +210,21 @@ const CourseDetail: React.FC = () => {
                   </li>
                 </ul>
              </div>
+
+             {course.price > 0 && (
+              <div className="bg-white p-8 rounded-[32px] border border-gray-200 shadow-sm">
+                <p className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-3">Método de pago</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center">
+                    <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-6" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">Pago Seguro en Línea</p>
+                    <p className="text-xs text-gray-500">Pago inmediato con bancos colombianos y retorno automático.</p>
+                  </div>
+                </div>
+              </div>
+             )}
 
              <div className="bg-[#d4af37]/10 p-10 rounded-[40px] border border-[#d4af37]/30 text-center">
                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Certificación Oficial</p>

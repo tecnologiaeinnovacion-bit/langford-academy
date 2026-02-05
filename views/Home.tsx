@@ -14,21 +14,72 @@ const Home: React.FC = () => {
       <section className="relative py-32 overflow-hidden border-b border-white/5">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-[#d4af37]/5 blur-[120px] rounded-full -mr-40"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-3xl">
-            <h1 className="text-7xl font-black leading-[0.9] mb-8 tracking-tighter">
-              EDUCACIÓN ELITE <br/>
-              <span className="text-[#d4af37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">PARA TODOS.</span>
-            </h1>
-            <p className="text-xl text-gray-400 mb-10 max-w-xl leading-relaxed font-medium">
-              Aprende de los mejores del mundo sin barreras económicas. Formación gratuita, certificaciones de alto impacto.
-            </p>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-              <button 
-                onClick={() => navigate('/register')}
-                className="bg-[#d4af37] text-black px-12 py-5 rounded-full font-black text-xl hover:bg-[#f1d279] transition-all shadow-2xl hover:scale-105"
-              >
-                Solicitar Beca Gratis
-              </button>
+          <div className="grid gap-16 lg:grid-cols-[1.1fr_0.9fr] items-center">
+            <div className="max-w-3xl">
+              <p className="text-[11px] uppercase tracking-[5px] font-black text-gray-500 mb-6">Langford Global Academy</p>
+              <h1 className="text-6xl md:text-7xl font-black leading-[0.9] mb-8 tracking-tighter">
+                EDUCACIÓN ELITE <br/>
+                <span className="text-[#d4af37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">CON EXPERIENCIA PREMIUM.</span>
+              </h1>
+              <p className="text-xl text-gray-400 mb-10 max-w-xl leading-relaxed font-medium">
+                Formación inmersiva con rutas guiadas, seguimiento por IA y acceso inmediato. Diseñada para que el estudiante avance rápido, sin fricción y con resultados visibles.
+              </p>
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
+                <button 
+                  onClick={() => navigate('/register')}
+                  className="bg-[#d4af37] text-black px-12 py-5 rounded-full font-black text-xl hover:bg-[#f1d279] transition-all shadow-2xl hover:scale-105"
+                >
+                  Solicitar Beca Gratis
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="border border-white/10 px-10 py-5 rounded-full font-black text-sm uppercase tracking-widest text-white hover:border-[#d4af37] hover:text-[#d4af37] transition-all"
+                >
+                  Ver Experiencia
+                </button>
+              </div>
+              <div className="mt-10 flex flex-wrap items-center gap-6 text-xs font-bold text-gray-400">
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-shield-check text-[#d4af37]"></i>
+                  <span>Pagos seguros con PSE</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-clock text-[#d4af37]"></i>
+                  <span>Aprende a tu ritmo 24/7</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Experiencia del estudiante</p>
+                  <h3 className="text-2xl font-black text-white mt-2">Panel inteligente</h3>
+                </div>
+                <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">UX 2025</span>
+              </div>
+              <div className="space-y-6">
+                {['Ruta personalizada de estudio', 'Clases en vivo + recursos descargables', 'Certificados verificables'].map((item) => (
+                  <div key={item} className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37]">
+                      <i className="fas fa-check"></i>
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">{item}</p>
+                      <p className="text-xs text-gray-500 mt-1">Todo el contenido se administra en un panel editable en tiempo real.</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-10 bg-black/50 rounded-2xl p-5 border border-white/10">
+                <p className="text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Pago destacado</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-6" />
+                    <span className="text-sm font-bold text-white">PSE disponible en cursos premium</span>
+                  </div>
+                  <span className="text-[10px] text-[#d4af37] font-black uppercase tracking-widest">Instantáneo</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -74,6 +125,23 @@ const Home: React.FC = () => {
                 <p className="text-5xl font-black text-[#d4af37] mb-6">$150.000<span className="text-sm font-bold text-gray-400">/cop</span></p>
                 <button onClick={() => navigate('/register')} className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#d4af37] transition-all">Empieza Hoy</button>
              </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-black border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { title: 'Diseño centrado en el usuario', text: 'Navegación clara, contenido ordenado y accesos rápidos para que avances sin interrupciones.' },
+              { title: 'Pagos PSE integrados', text: 'Transacciones seguras para cursos premium y certificados, con retorno automático a la plataforma.' },
+              { title: 'Administración fácil', text: 'Panel editable para mover imágenes, actualizar nombres y ajustar lecturas en segundos.' }
+            ].map((card) => (
+              <div key={card.title} className="bg-[#0f0f0f] p-8 rounded-3xl border border-white/10">
+                <h3 className="text-lg font-black text-white mb-4">{card.title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{card.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

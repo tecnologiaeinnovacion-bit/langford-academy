@@ -25,6 +25,74 @@ const AdminDashboard: React.FC = () => {
     setStoredCoursesRaw(JSON.stringify(courses));
   }, [courses]);
 
+  const handleCourseFieldChange = (courseId: string, field: keyof Course, value: string | number) => {
+    setCourses(prev => prev.map(c => (
+      c.id === courseId ? { ...c, [field]: value } : c
+    )));
+  };
+
+  const handleModuleTitleChange = (courseId: string, moduleId: string, value: string) => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => (m.id === moduleId ? { ...m, title: value } : m))
+      };
+    }));
+  };
+
+  const moveModule = (courseId: string, moduleId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      const index = c.modules.findIndex(m => m.id === moduleId);
+      if (index < 0) return c;
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= c.modules.length) return c;
+      const updated = [...c.modules];
+      const [moved] = updated.splice(index, 1);
+      updated.splice(newIndex, 0, moved);
+      return { ...c, modules: updated };
+    }));
+  };
+
+  const removeModule = (courseId: string, moduleId: string) => {
+    setCourses(prev => prev.map(c => (
+      c.id === courseId ? { ...c, modules: c.modules.filter(m => m.id !== moduleId) } : c
+    )));
+  };
+
+  const moveLesson = (courseId: string, moduleId: string, lessonId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => {
+          if (m.id !== moduleId) return m;
+          const index = m.lessons.findIndex(l => l.id === lessonId);
+          if (index < 0) return m;
+          const newIndex = direction === 'up' ? index - 1 : index + 1;
+          if (newIndex < 0 || newIndex >= m.lessons.length) return m;
+          const updated = [...m.lessons];
+          const [moved] = updated.splice(index, 1);
+          updated.splice(newIndex, 0, moved);
+          return { ...m, lessons: updated };
+        })
+      };
+    }));
+  };
+
+  const removeLesson = (courseId: string, moduleId: string, lessonId: string) => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => (
+          m.id === moduleId ? { ...m, lessons: m.lessons.filter(l => l.id !== lessonId) } : m
+        ))
+      };
+    }));
+  };
+
   const handleUpdateLesson = (updatedLesson: Lesson) => {
     if (!editingLesson) return;
     const { courseId, moduleId } = editingLesson;
@@ -227,6 +295,85 @@ const AdminDashboard: React.FC = () => {
 
               {activeCourseId === c.id && (
                 <div className="mt-8 border-t border-white/5 pt-8 space-y-8 animate-in slide-in-from-top-4">
+                  <div className="bg-black/40 p-6 rounded-3xl border border-white/5">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest">Datos del curso</h4>
+                        <p className="text-xs text-gray-500 font-bold mt-2">Edita títulos, imágenes, precios y descripción en tiempo real.</p>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Guardado automático</span>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.title}
+                        onChange={e => handleCourseFieldChange(c.id, 'title', e.target.value)}
+                        placeholder="Nombre del curso"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.category}
+                        onChange={e => handleCourseFieldChange(c.id, 'category', e.target.value)}
+                        placeholder="Categoría"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.instructor}
+                        onChange={e => handleCourseFieldChange(c.id, 'instructor', e.target.value)}
+                        placeholder="Instructor"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.instructorTitle}
+                        onChange={e => handleCourseFieldChange(c.id, 'instructorTitle', e.target.value)}
+                        placeholder="Cargo del instructor"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.image}
+                        onChange={e => handleCourseFieldChange(c.id, 'image', e.target.value)}
+                        placeholder="URL de imagen principal"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.duration}
+                        onChange={e => handleCourseFieldChange(c.id, 'duration', e.target.value)}
+                        placeholder="Duración"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.level}
+                        onChange={e => handleCourseFieldChange(c.id, 'level', e.target.value)}
+                        placeholder="Nivel"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        type="number"
+                        value={c.price}
+                        onChange={e => handleCourseFieldChange(c.id, 'price', Number(e.target.value))}
+                        placeholder="Precio del curso"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        type="number"
+                        value={c.certificatePrice}
+                        onChange={e => handleCourseFieldChange(c.id, 'certificatePrice', Number(e.target.value))}
+                        placeholder="Precio certificado"
+                      />
+                      <textarea
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+                        value={c.description}
+                        onChange={e => handleCourseFieldChange(c.id, 'description', e.target.value)}
+                        placeholder="Resumen corto"
+                      />
+                      <textarea
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-32"
+                        value={c.longDescription}
+                        onChange={e => handleCourseFieldChange(c.id, 'longDescription', e.target.value)}
+                        placeholder="Descripción larga"
+                      />
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center">
                     <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest">Currículo</h4>
                     <button onClick={() => addModule(c.id)} className="text-[#d4af37] text-xs font-black uppercase">Añadir Módulo</button>
@@ -234,7 +381,18 @@ const AdminDashboard: React.FC = () => {
                   {c.modules.map(m => (
                     <div key={m.id} className="bg-black/40 p-6 rounded-3xl border border-white/5">
                       <div className="flex justify-between items-center mb-6">
-                        <span className="font-bold text-white">{m.title}</span>
+                        <div className="flex items-center gap-3 w-full">
+                          <input
+                            className="bg-white/5 p-2 rounded-lg outline-none text-sm font-bold flex-1"
+                            value={m.title}
+                            onChange={e => handleModuleTitleChange(c.id, m.id, e.target.value)}
+                          />
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => moveModule(c.id, m.id, 'up')} className="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-lg">↑</button>
+                            <button onClick={() => moveModule(c.id, m.id, 'down')} className="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-lg">↓</button>
+                            <button onClick={() => removeModule(c.id, m.id)} className="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded-lg">Eliminar</button>
+                          </div>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                            <button onClick={() => addLesson(c.id, m.id, 'video')} className="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg">+ Video</button>
                            <button onClick={() => addLesson(c.id, m.id, 'reading')} className="text-[10px] bg-green-500/10 text-green-400 px-3 py-1 rounded-lg">+ Lectura</button>
@@ -250,7 +408,12 @@ const AdminDashboard: React.FC = () => {
                                <i className={`fas ${l.type === 'video' ? 'fa-play' : l.type === 'quiz' ? 'fa-pen-to-square' : l.type === 'link' ? 'fa-link' : l.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-[#d4af37]`}></i>
                                <span className="font-bold">{l.title}</span>
                              </div>
-                             <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             <div className="flex items-center gap-3">
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'up')} className="text-[10px] bg-white/10 text-gray-400 px-2 py-1 rounded-lg">↑</button>
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'down')} className="text-[10px] bg-white/10 text-gray-400 px-2 py-1 rounded-lg">↓</button>
+                               <button onClick={() => removeLesson(c.id, m.id, l.id)} className="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded-lg">Eliminar</button>
+                               <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             </div>
                           </div>
                         ))}
                       </div>
