@@ -58,7 +58,7 @@ const Home: React.FC = () => {
                   onClick={() => navigate('/dashboard')}
                   className="border border-white/10 px-10 py-5 rounded-full font-black text-sm uppercase tracking-widest text-white hover:border-[#d4af37] hover:text-[#d4af37] transition-all"
                 >
-                  Ver Experiencia
+                  Ver plataforma
                 </button>
               </div>
               <div className="mt-10 flex flex-wrap items-center gap-6 text-xs font-bold text-gray-400">
@@ -72,14 +72,14 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Experiencia del estudiante</p>
-                  <h3 className="text-2xl font-black text-white mt-2">Panel inteligente</h3>
+              <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Plataforma moderna</p>
+                    <h3 className="text-2xl font-black text-white mt-2">Panel de aprendizaje</h3>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Nuevo</span>
                 </div>
-                <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">UX 2025</span>
-              </div>
               <div className="space-y-6">
                 {['Ruta personalizada de estudio', 'Clases en vivo + recursos descargables', 'Certificados verificables'].map((item) => (
                   <div key={item} className="flex items-start gap-4">
