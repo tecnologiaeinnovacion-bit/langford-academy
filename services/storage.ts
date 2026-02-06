@@ -1,6 +1,7 @@
 import { Course, CertificateRecord, PaymentRecord, SiteContent, User } from '../types';
 import { DEFAULT_SITE_CONTENT, INITIAL_COURSES_DATA } from '../constants';
 import { getDbItem, setDbItem } from './db';
+import { mapSheetToCourses } from './sheets';
 
 type EnrollmentMap = Record<string, string[]>;
 type ProgressMap = Record<string, Record<string, string[]>>;
@@ -39,6 +40,22 @@ export const initStorage = async () => {
   cache.certificates = await getDbItem<CertificateRecord[]>(STORAGE_KEYS.certificates, []);
   cache.siteContent = await getDbItem<SiteContent>(STORAGE_KEYS.siteContent, DEFAULT_SITE_CONTENT);
   cache.currentUserId = await getDbItem<string | null>(STORAGE_KEYS.currentUserId, null);
+
+  const sheetsUrl = import.meta.env.VITE_COURSES_SHEET_URL as string | undefined;
+  if (sheetsUrl) {
+    try {
+      const response = await fetch(sheetsUrl);
+      if (response.ok) {
+        const csvContent = await response.text();
+        const sheetCourses = mapSheetToCourses(csvContent);
+        if (sheetCourses.length > 0) {
+          cache.courses = sheetCourses;
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar cursos desde Sheets.', error);
+    }
+  }
 
   if (cache.users.length === 0) {
     cache.users = [

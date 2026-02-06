@@ -11,6 +11,7 @@ import Login from './views/Login';
 import AdminLogin from './views/AdminLogin';
 import AdminDashboard from './views/AdminDashboard';
 import CertificateVerification from './views/CertificateVerification';
+import { APP_VERSION } from './constants';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -67,6 +68,9 @@ const App: React.FC = () => {
               <a href="#" className="hover:text-white">Privacidad</a>
               <a href="#" className="hover:text-white">Términos</a>
             </div>
+          </div>
+          <div className="max-w-7xl mx-auto mt-4 text-[10px] text-gray-600 uppercase tracking-widest font-black">
+            Versión {APP_VERSION}
           </div>
         </footer>
       )}
