@@ -11,15 +11,30 @@ const Evaluation: React.FC<EvaluationProps> = ({ questions, onComplete }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResult, setShowResult] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  if (questions.length === 0) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        No hay preguntas configuradas para esta evaluación.
+      </div>
+    );
+  }
 
   const handleAnswer = (optionIdx: number) => {
-    const newAnswers = [...answers, optionIdx];
+    setSelectedOption(optionIdx);
+  };
+
+  const handleNext = () => {
+    if (selectedOption === null) return;
+    const newAnswers = [...answers, selectedOption];
     setAnswers(newAnswers);
-    
+    setSelectedOption(null);
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      const correctCount = newAnswers.reduce((acc, ans, i) => 
+      const correctCount = newAnswers.reduce((acc, ans, i) =>
         ans === questions[i].correctAnswer ? acc + 1 : acc, 0
       );
       const score = Math.round((correctCount / questions.length) * 100);
@@ -38,7 +53,7 @@ const Evaluation: React.FC<EvaluationProps> = ({ questions, onComplete }) => {
         <h3 className="text-2xl font-bold">
           {score >= 70 ? '¡Felicidades! Has aprobado.' : 'No has alcanzado el puntaje mínimo.'}
         </h3>
-        <button onClick={() => { setCurrentIdx(0); setAnswers([]); setShowResult(false); }} className="bg-blue-900 text-white px-8 py-3 rounded-xl font-bold">
+        <button onClick={() => { setCurrentIdx(0); setAnswers([]); setShowResult(false); setSelectedOption(null); }} className="bg-blue-900 text-white px-8 py-3 rounded-xl font-bold">
           Intentar de nuevo
         </button>
       </div>
@@ -57,16 +72,36 @@ const Evaluation: React.FC<EvaluationProps> = ({ questions, onComplete }) => {
       <h3 className="text-xl font-black text-gray-900 mb-8 leading-tight">{questions[currentIdx].question}</h3>
       
       <div className="space-y-4">
-        {questions[currentIdx].options.map((opt, i) => (
-          <button 
-            key={i} 
-            onClick={() => handleAnswer(i)}
-            className="w-full p-5 text-left border-2 border-gray-100 rounded-2xl hover:border-blue-900 hover:bg-blue-50 transition-all font-bold text-gray-700"
-          >
-            {opt}
-          </button>
-        ))}
+        {questions[currentIdx].options.map((opt, i) => {
+          const isSelected = selectedOption === i;
+          const isCorrect = i === questions[currentIdx].correctAnswer;
+          return (
+            <button 
+              key={i} 
+              onClick={() => handleAnswer(i)}
+              className={`w-full p-5 text-left border-2 rounded-2xl transition-all font-bold text-gray-700 ${
+                isSelected ? (isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50') : 'border-gray-100 hover:border-blue-900 hover:bg-blue-50'
+              }`}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
+      {selectedOption !== null && (
+        <div className="mt-6 bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm text-gray-600">
+          <p className="font-bold mb-2">
+            {selectedOption === questions[currentIdx].correctAnswer ? 'Respuesta correcta' : 'Respuesta incorrecta'}
+          </p>
+          <p>{questions[currentIdx].explanation || 'Revisa el contenido y vuelve a intentarlo si es necesario.'}</p>
+          <button
+            onClick={handleNext}
+            className="mt-4 bg-blue-900 text-white px-6 py-2 rounded-xl font-bold"
+          >
+            Continuar
+          </button>
+        </div>
+      )}
     </div>
   );
 };

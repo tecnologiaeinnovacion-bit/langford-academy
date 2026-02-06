@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { findUserByEmail, setStoredUser, upsertUser } from '../services/storage';
+import { findUserByEmail, setCurrentUser, upsertUser } from '../services/storage';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -30,10 +30,11 @@ const Register: React.FC = () => {
       country: formData.country,
       password: formData.password,
       provider: 'local' as const,
-      isLoggedIn: true
+      isLoggedIn: true,
+      role: 'USER' as const
     };
     upsertUser(userRecord);
-    setStoredUser(userRecord);
+    setCurrentUser(userRecord);
     navigate('/dashboard');
   };
 

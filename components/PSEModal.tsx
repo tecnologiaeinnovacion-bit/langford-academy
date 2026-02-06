@@ -6,14 +6,12 @@ interface PSEModalProps {
   onClose: () => void;
   amount: number;
   courseTitle: string;
-  paymentUrl: string;
-  returnUrl: string;
+  paymentId: string | null;
+  onConfirm: () => void;
 }
 
-const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitle, paymentUrl, returnUrl }) => {
+const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitle, paymentId, onConfirm }) => {
   if (!isOpen) return null;
-
-  const paymentLink = `${paymentUrl}?amount=${amount}&reference=${encodeURIComponent(courseTitle)}&return_url=${encodeURIComponent(returnUrl)}`;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -40,15 +38,21 @@ const PSEModal: React.FC<PSEModalProps> = ({ isOpen, onClose, amount, courseTitl
             </div>
 
             <div className="text-sm text-gray-600 leading-relaxed">
-              Serás redirigido a la pasarela PSE para completar el pago. Al finalizar, regresarás a la plataforma para habilitar tu certificado.
+              Simulación de pago PSE para pruebas. Usa el token fijo y confirma para generar tu certificado automáticamente.
             </div>
 
-            <a
-              href={paymentLink}
-              className="w-full bg-blue-700 text-white font-bold py-4 rounded-xl hover:bg-blue-800 transition-all shadow-lg shadow-blue-200 inline-flex items-center justify-center"
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 space-y-2">
+              <p className="font-bold">Payment ID: {paymentId ?? 'pendiente'}</p>
+              <p className="font-bold">Token fijo: LANGFORD_PSE_TOKEN</p>
+            </div>
+
+            <button
+              onClick={onConfirm}
+              disabled={!paymentId}
+              className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg inline-flex items-center justify-center ${paymentId ? 'bg-blue-700 text-white hover:bg-blue-800 shadow-blue-200' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
             >
-              Ir a PSE y pagar
-            </a>
+              Confirmar pago (Mock)
+            </button>
           </div>
         </div>
       </div>

@@ -1,129 +1,199 @@
-import { User } from '../types';
+import { Course, CertificateRecord, PaymentRecord, SiteContent, User } from '../types';
+import { DEFAULT_SITE_CONTENT, INITIAL_COURSES_DATA } from '../constants';
+import { getDbItem, setDbItem } from './db';
+
+type EnrollmentMap = Record<string, string[]>;
+type ProgressMap = Record<string, Record<string, string[]>>;
 
 const STORAGE_KEYS = {
-  user: 'langford_user',
-  courses: 'langford_courses',
-  enrollments: 'langford_enrollments',
-  progress: 'langford_progress',
-  certificates: 'langford_certificates',
-  users: 'langford_users',
-  certificateRecords: 'langford_certificate_records'
+  courses: 'courses',
+  users: 'users',
+  enrollments: 'enrollments',
+  progress: 'progress',
+  payments: 'payments',
+  certificates: 'certificates',
+  siteContent: 'site-content',
+  currentUserId: 'current-user-id'
 };
 
-export const safeParse = <T>(value: string | null, fallback: T): T => {
-  if (!value) return fallback;
-  try {
-    return JSON.parse(value) as T;
-  } catch (error) {
-    console.error('Storage parse error:', error);
-    return fallback;
+const cache = {
+  courses: INITIAL_COURSES_DATA as Course[],
+  users: [] as User[],
+  enrollments: {} as EnrollmentMap,
+  progress: {} as ProgressMap,
+  payments: [] as PaymentRecord[],
+  certificates: [] as CertificateRecord[],
+  siteContent: DEFAULT_SITE_CONTENT as SiteContent,
+  currentUserId: null as string | null
+};
+
+let isInitialized = false;
+
+export const initStorage = async () => {
+  if (isInitialized) return;
+  cache.courses = await getDbItem<Course[]>(STORAGE_KEYS.courses, INITIAL_COURSES_DATA);
+  cache.users = await getDbItem<User[]>(STORAGE_KEYS.users, []);
+  cache.enrollments = await getDbItem<EnrollmentMap>(STORAGE_KEYS.enrollments, {});
+  cache.progress = await getDbItem<ProgressMap>(STORAGE_KEYS.progress, {});
+  cache.payments = await getDbItem<PaymentRecord[]>(STORAGE_KEYS.payments, []);
+  cache.certificates = await getDbItem<CertificateRecord[]>(STORAGE_KEYS.certificates, []);
+  cache.siteContent = await getDbItem<SiteContent>(STORAGE_KEYS.siteContent, DEFAULT_SITE_CONTENT);
+  cache.currentUserId = await getDbItem<string | null>(STORAGE_KEYS.currentUserId, null);
+
+  if (cache.users.length === 0) {
+    cache.users = [
+      {
+        id: 'admin-1',
+        name: 'Administrador Langford',
+        email: 'admin@langford.edu',
+        phone: '',
+        country: 'Colombia',
+        password: 'admin123',
+        provider: 'local',
+        isLoggedIn: false,
+        role: 'ADMIN'
+      }
+    ];
+    await setDbItem(STORAGE_KEYS.users, cache.users);
   }
+
+  await Promise.all([
+    setDbItem(STORAGE_KEYS.courses, cache.courses),
+    setDbItem(STORAGE_KEYS.enrollments, cache.enrollments),
+    setDbItem(STORAGE_KEYS.progress, cache.progress),
+    setDbItem(STORAGE_KEYS.payments, cache.payments),
+    setDbItem(STORAGE_KEYS.certificates, cache.certificates),
+    setDbItem(STORAGE_KEYS.siteContent, cache.siteContent),
+    setDbItem(STORAGE_KEYS.currentUserId, cache.currentUserId)
+  ]);
+
+  isInitialized = true;
 };
 
-export const getStoredUser = (): User | null => {
-  const stored = safeParse<Partial<User> | null>(localStorage.getItem(STORAGE_KEYS.user), null);
-  if (!stored || !stored.name) return null;
-
-  return {
-    name: stored.name,
-    email: stored.email ?? '',
-    phone: stored.phone ?? '',
-    country: stored.country ?? '',
-    provider: stored.provider,
-    password: stored.password,
-    isLoggedIn: stored.isLoggedIn ?? true,
-    id: stored.id
-  };
+const persist = <T>(key: string, value: T) => {
+  setDbItem(key, value).catch((error) => {
+    console.error('Storage error:', error);
+  });
 };
 
-export const setStoredUser = (user: User) => {
-  localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+export const getCourses = (): Course[] => cache.courses;
+
+export const setCourses = (courses: Course[]) => {
+  cache.courses = courses;
+  persist(STORAGE_KEYS.courses, courses);
 };
 
-export const clearStoredUser = () => {
-  localStorage.removeItem(STORAGE_KEYS.user);
+export const getSiteContent = (): SiteContent => cache.siteContent;
+
+export const setSiteContent = (content: SiteContent) => {
+  cache.siteContent = content;
+  persist(STORAGE_KEYS.siteContent, content);
 };
 
-export const getEnrollments = (): string[] => {
-  return safeParse<string[]>(localStorage.getItem(STORAGE_KEYS.enrollments), []);
-};
+export const getUsers = (): User[] => cache.users;
 
-export const addEnrollment = (courseId: string): string[] => {
-  const enrollments = getEnrollments();
-  if (!enrollments.includes(courseId)) {
-    enrollments.push(courseId);
-    localStorage.setItem(STORAGE_KEYS.enrollments, JSON.stringify(enrollments));
-  }
-  return enrollments;
-};
-
-export const getCourseProgress = (courseId: string): string[] => {
-  const progressMap = safeParse<Record<string, string[]>>(localStorage.getItem(STORAGE_KEYS.progress), {});
-  return progressMap[courseId] ?? [];
-};
-
-export const setCourseProgress = (courseId: string, lessons: string[]) => {
-  const progressMap = safeParse<Record<string, string[]>>(localStorage.getItem(STORAGE_KEYS.progress), {});
-  progressMap[courseId] = lessons;
-  localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(progressMap));
-};
-
-export const getCertificateStatus = (courseId: string): boolean => {
-  const statusMap = safeParse<Record<string, boolean>>(localStorage.getItem(STORAGE_KEYS.certificates), {});
-  return Boolean(statusMap[courseId]);
-};
-
-export const setCertificateStatus = (courseId: string, value: boolean) => {
-  const statusMap = safeParse<Record<string, boolean>>(localStorage.getItem(STORAGE_KEYS.certificates), {});
-  statusMap[courseId] = value;
-  localStorage.setItem(STORAGE_KEYS.certificates, JSON.stringify(statusMap));
-};
-
-export interface CertificateRecord {
-  courseId: string;
-  issuedAt: string;
-  certificateId: string;
-}
-
-export const getCertificateRecord = (courseId: string): CertificateRecord | null => {
-  const recordMap = safeParse<Record<string, CertificateRecord>>(localStorage.getItem(STORAGE_KEYS.certificateRecords), {});
-  return recordMap[courseId] ?? null;
-};
-
-export const setCertificateRecord = (record: CertificateRecord) => {
-  const recordMap = safeParse<Record<string, CertificateRecord>>(localStorage.getItem(STORAGE_KEYS.certificateRecords), {});
-  recordMap[record.courseId] = record;
-  localStorage.setItem(STORAGE_KEYS.certificateRecords, JSON.stringify(recordMap));
-};
-
-export const getStoredUsers = (): User[] => {
-  return safeParse<User[]>(localStorage.getItem(STORAGE_KEYS.users), []);
-};
-
-export const setStoredUsers = (users: User[]) => {
-  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+export const setUsers = (users: User[]) => {
+  cache.users = users;
+  persist(STORAGE_KEYS.users, users);
 };
 
 export const upsertUser = (user: User) => {
-  const users = getStoredUsers();
+  const users = [...cache.users];
   const existingIndex = users.findIndex(existing => existing.email.toLowerCase() === user.email.toLowerCase());
   if (existingIndex >= 0) {
     users[existingIndex] = { ...users[existingIndex], ...user };
   } else {
     users.push(user);
   }
-  setStoredUsers(users);
+  setUsers(users);
 };
 
-export const findUserByEmail = (email: string): User | null => {
-  const users = getStoredUsers();
-  return users.find(user => user.email.toLowerCase() === email.toLowerCase()) ?? null;
+export const findUserByEmail = (email: string) => {
+  return cache.users.find(user => user.email.toLowerCase() === email.toLowerCase()) ?? null;
 };
 
-export const getStoredCoursesRaw = () => {
-  return localStorage.getItem(STORAGE_KEYS.courses);
+export const getCurrentUser = (): User | null => {
+  if (!cache.currentUserId) return null;
+  return cache.users.find(user => user.id === cache.currentUserId) ?? null;
 };
 
-export const setStoredCoursesRaw = (value: string) => {
-  localStorage.setItem(STORAGE_KEYS.courses, value);
+export const setCurrentUser = (user: User) => {
+  cache.currentUserId = user.id ?? null;
+  persist(STORAGE_KEYS.currentUserId, cache.currentUserId);
+  upsertUser({ ...user, isLoggedIn: true });
+};
+
+export const clearCurrentUser = () => {
+  if (cache.currentUserId) {
+    const user = cache.users.find(item => item.id === cache.currentUserId);
+    if (user) {
+      upsertUser({ ...user, isLoggedIn: false });
+    }
+  }
+  cache.currentUserId = null;
+  persist(STORAGE_KEYS.currentUserId, cache.currentUserId);
+};
+
+export const getEnrollments = (userId: string): string[] => {
+  return cache.enrollments[userId] ?? [];
+};
+
+export const addEnrollment = (userId: string, courseId: string) => {
+  const enrollments = cache.enrollments[userId] ?? [];
+  if (!enrollments.includes(courseId)) {
+    cache.enrollments[userId] = [...enrollments, courseId];
+    persist(STORAGE_KEYS.enrollments, cache.enrollments);
+  }
+};
+
+export const getCourseProgress = (userId: string, courseId: string): string[] => {
+  return cache.progress[userId]?.[courseId] ?? [];
+};
+
+export const setCourseProgress = (userId: string, courseId: string, lessons: string[]) => {
+  cache.progress[userId] = {
+    ...(cache.progress[userId] ?? {}),
+    [courseId]: lessons
+  };
+  persist(STORAGE_KEYS.progress, cache.progress);
+};
+
+export const getPayments = (): PaymentRecord[] => cache.payments;
+
+export const setPayments = (payments: PaymentRecord[]) => {
+  cache.payments = payments;
+  persist(STORAGE_KEYS.payments, payments);
+};
+
+export const upsertPayment = (payment: PaymentRecord) => {
+  const payments = [...cache.payments];
+  const index = payments.findIndex(item => item.id === payment.id);
+  if (index >= 0) {
+    payments[index] = payment;
+  } else {
+    payments.push(payment);
+  }
+  setPayments(payments);
+};
+
+export const getCertificates = (): CertificateRecord[] => cache.certificates;
+
+export const setCertificates = (certificates: CertificateRecord[]) => {
+  cache.certificates = certificates;
+  persist(STORAGE_KEYS.certificates, certificates);
+};
+
+export const upsertCertificate = (certificate: CertificateRecord) => {
+  const certificates = [...cache.certificates];
+  const index = certificates.findIndex(item => item.id === certificate.id);
+  if (index >= 0) {
+    certificates[index] = certificate;
+  } else {
+    certificates.push(certificate);
+  }
+  setCertificates(certificates);
+};
+
+export const getCertificateById = (certificateId: string) => {
+  return cache.certificates.find(cert => cert.id === certificateId) ?? null;
 };

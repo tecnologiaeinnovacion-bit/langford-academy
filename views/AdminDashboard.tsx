@@ -1,15 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
-import { getStoredCourses } from '../constants';
-import { Course, Module, Lesson, ResourceType } from '../types';
-import { getStoredUsers, setStoredCoursesRaw } from '../services/storage';
+import { Course, Module, Lesson, ResourceType, SiteContent } from '../types';
+import { getCertificates, getCourses, getCurrentUser, getPayments, getSiteContent, getUsers, setCourses as setCoursesStore, setSiteContent } from '../services/storage';
 
 const AdminDashboard: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>(getStoredCourses());
+  const [courses, setCourses] = useState<Course[]>(getCourses());
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [editingLesson, setEditingLesson] = useState<{courseId: string, moduleId: string, lesson: Lesson} | null>(null);
-  const users = getStoredUsers();
+  const users = getUsers();
+  const payments = getPayments();
+  const certificates = getCertificates();
+  const [siteContentState, setSiteContentState] = useState<SiteContent>(getSiteContent());
+  const currentUser = getCurrentUser();
+
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center space-y-6">
+        <h2 className="text-2xl font-black">Acceso restringido</h2>
+        <p className="text-gray-500 text-sm">Ingresa como administrador para continuar.</p>
+        <button
+          onClick={() => window.location.href = '/#/admin'}
+          className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase tracking-widest"
+        >
+          Ir a login admin
+        </button>
+      </div>
+    );
+  }
   
   const [newCourse, setNewCourse] = useState<Partial<Course>>({
     title: '',
@@ -17,13 +35,98 @@ const AdminDashboard: React.FC = () => {
     category: 'Tecnología',
     price: 0,
     certificatePrice: 150000,
-    modules: []
+    modules: [],
+    tags: []
   });
 
-  // Persistir cambios en localStorage cada vez que se actualiza la lista
   useEffect(() => {
-    setStoredCoursesRaw(JSON.stringify(courses));
+    setCoursesStore(courses);
   }, [courses]);
+
+  useEffect(() => {
+    setSiteContent(siteContentState);
+  }, [siteContentState]);
+
+  const handleCourseFieldChange = (courseId: string, field: keyof Course, value: string | number | string[]) => {
+    setCourses(prev => prev.map(c => (
+      c.id === courseId ? { ...c, [field]: value } : c
+    )));
+  };
+
+  const handleImageUpload = (courseId: string, field: 'image' | 'bannerImage', file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      handleCourseFieldChange(courseId, field, reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleModuleTitleChange = (courseId: string, moduleId: string, value: string) => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => (m.id === moduleId ? { ...m, title: value } : m))
+      };
+    }));
+  };
+
+  const moveModule = (courseId: string, moduleId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      const index = c.modules.findIndex(m => m.id === moduleId);
+      if (index < 0) return c;
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= c.modules.length) return c;
+      const updated = [...c.modules];
+      const [moved] = updated.splice(index, 1);
+      updated.splice(newIndex, 0, moved);
+      return { ...c, modules: updated };
+    }));
+  };
+
+  const removeModule = (courseId: string, moduleId: string) => {
+    setCourses(prev => prev.map(c => (
+      c.id === courseId ? { ...c, modules: c.modules.filter(m => m.id !== moduleId) } : c
+    )));
+  };
+
+  const moveLesson = (courseId: string, moduleId: string, lessonId: string, direction: 'up' | 'down') => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => {
+          if (m.id !== moduleId) return m;
+          const index = m.lessons.findIndex(l => l.id === lessonId);
+          if (index < 0) return m;
+          const newIndex = direction === 'up' ? index - 1 : index + 1;
+          if (newIndex < 0 || newIndex >= m.lessons.length) return m;
+          const updated = [...m.lessons];
+          const [moved] = updated.splice(index, 1);
+          updated.splice(newIndex, 0, moved);
+          return { ...m, lessons: updated };
+        })
+      };
+    }));
+  };
+
+  const removeLesson = (courseId: string, moduleId: string, lessonId: string) => {
+    setCourses(prev => prev.map(c => {
+      if (c.id !== courseId) return c;
+      return {
+        ...c,
+        modules: c.modules.map(m => (
+          m.id === moduleId ? { ...m, lessons: m.lessons.filter(l => l.id !== lessonId) } : m
+        ))
+      };
+    }));
+  };
+
+  const removeCourse = (courseId: string) => {
+    setCourses(prev => prev.filter(c => c.id !== courseId));
+  };
 
   const handleUpdateLesson = (updatedLesson: Lesson) => {
     if (!editingLesson) return;
@@ -49,7 +152,7 @@ const AdminDashboard: React.FC = () => {
     setEditingLesson(null);
   };
 
-  const handleLessonFieldChange = (field: keyof Lesson, value: string) => {
+  const handleLessonFieldChange = (field: keyof Lesson, value: string | boolean) => {
     if (!editingLesson) return;
     setEditingLesson({
       ...editingLesson,
@@ -63,20 +166,33 @@ const AdminDashboard: React.FC = () => {
   const handleLessonTypeChange = (value: ResourceType) => {
     if (!editingLesson) return;
     setEditingLesson({
-      ...editingLesson,
+        ...editingLesson,
       lesson: {
         ...editingLesson.lesson,
         type: value,
         videoUrl: value === 'video' ? editingLesson.lesson.videoUrl || '' : undefined,
         content: value === 'reading' ? editingLesson.lesson.content || '' : undefined,
-        externalLink: value === 'link' ? editingLesson.lesson.externalLink || '' : undefined,
+        externalLink: value === 'link' || value === 'reading' ? editingLesson.lesson.externalLink || '' : undefined,
         fileUrl: value === 'file' ? editingLesson.lesson.fileUrl || '' : undefined,
-        evaluation: value === 'quiz' ? editingLesson.lesson.evaluation || [] : undefined
+        evaluation: value === 'quiz' ? editingLesson.lesson.evaluation || [] : undefined,
+        taskPrompt: value === 'task' ? editingLesson.lesson.taskPrompt || '' : undefined
       }
     });
   };
 
-  const handleQuizQuestionChange = (index: number, field: 'question' | 'correctAnswer', value: string | number) => {
+  const downloadCsv = (filename: string, rows: string[][]) => {
+    const csvContent = rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleQuizQuestionChange = (index: number, field: 'question' | 'correctAnswer' | 'explanation', value: string | number) => {
     if (!editingLesson || !editingLesson.lesson.evaluation) return;
     const updated = editingLesson.lesson.evaluation.map((q, idx) => {
       if (idx !== index) return q;
@@ -157,7 +273,8 @@ const AdminDashboard: React.FC = () => {
                 title: 'Nueva Lección',
                 duration: '10:00',
                 type: type,
-                videoUrl: type === 'video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : undefined,
+                required: true,
+                videoUrl: type === 'video' ? 'https://www.youtube.com/embed/aircAruvnKk' : undefined,
                 content: type === 'reading' ? 'Contenido de lectura inicial.' : undefined,
                 externalLink: type === 'link' ? 'https://www.ejemplo.com' : undefined,
                 fileUrl: type === 'file' ? 'https://www.ejemplo.com/recurso.pdf' : undefined,
@@ -166,9 +283,11 @@ const AdminDashboard: React.FC = () => {
                     id: `q-${Date.now()}`,
                     question: '¿Cuál es el objetivo de esta lección?',
                     options: ['Comprender', 'Memorizar', 'Repetir'],
-                    correctAnswer: 0
+                    correctAnswer: 0,
+                    explanation: 'La respuesta correcta es Comprender.'
                   }
-                ] : undefined
+                ] : undefined,
+                taskPrompt: type === 'task' ? 'Confirma tu aprendizaje en dos frases.' : undefined
               };
               return { ...m, lessons: [...m.lessons, newLesson] };
             }
@@ -189,7 +308,7 @@ const AdminDashboard: React.FC = () => {
       studentsCount: 0,
       duration: '4 meses',
       level: 'Principiante',
-      longDescription: newCourse.description || '',
+      longDescription: newCourse.longDescription || newCourse.description || '',
       instructorTitle: 'Staff Langford',
       image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800',
       modules: []
@@ -227,6 +346,117 @@ const AdminDashboard: React.FC = () => {
 
               {activeCourseId === c.id && (
                 <div className="mt-8 border-t border-white/5 pt-8 space-y-8 animate-in slide-in-from-top-4">
+                  <div className="bg-black/40 p-6 rounded-3xl border border-white/5">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest">Datos del curso</h4>
+                        <p className="text-xs text-gray-500 font-bold mt-2">Edita títulos, imágenes, precios y descripción en tiempo real.</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Guardado automático</span>
+                        <button
+                          onClick={() => removeCourse(c.id)}
+                          className="text-[10px] uppercase tracking-widest font-black text-red-400 border border-red-500/30 px-3 py-1 rounded-full"
+                        >
+                          Eliminar curso
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.title}
+                        onChange={e => handleCourseFieldChange(c.id, 'title', e.target.value)}
+                        placeholder="Nombre del curso"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.category}
+                        onChange={e => handleCourseFieldChange(c.id, 'category', e.target.value)}
+                        placeholder="Categoría"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.instructor}
+                        onChange={e => handleCourseFieldChange(c.id, 'instructor', e.target.value)}
+                        placeholder="Instructor"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.instructorTitle}
+                        onChange={e => handleCourseFieldChange(c.id, 'instructorTitle', e.target.value)}
+                        placeholder="Cargo del instructor"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.image}
+                        onChange={e => handleCourseFieldChange(c.id, 'image', e.target.value)}
+                        placeholder="URL de imagen principal"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(c.id, 'image', e.target.files?.[0] ?? null)}
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.bannerImage || ''}
+                        onChange={e => handleCourseFieldChange(c.id, 'bannerImage', e.target.value)}
+                        placeholder="URL de banner"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(c.id, 'bannerImage', e.target.files?.[0] ?? null)}
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.duration}
+                        onChange={e => handleCourseFieldChange(c.id, 'duration', e.target.value)}
+                        placeholder="Duración"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.level}
+                        onChange={e => handleCourseFieldChange(c.id, 'level', e.target.value)}
+                        placeholder="Nivel"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        type="number"
+                        value={c.price}
+                        onChange={e => handleCourseFieldChange(c.id, 'price', Number(e.target.value))}
+                        placeholder="Precio del curso"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        type="number"
+                        value={c.certificatePrice}
+                        onChange={e => handleCourseFieldChange(c.id, 'certificatePrice', Number(e.target.value))}
+                        placeholder="Precio certificado"
+                      />
+                      <textarea
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+                        value={c.description}
+                        onChange={e => handleCourseFieldChange(c.id, 'description', e.target.value)}
+                        placeholder="Resumen corto"
+                      />
+                      <textarea
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-32"
+                        value={c.longDescription}
+                        onChange={e => handleCourseFieldChange(c.id, 'longDescription', e.target.value)}
+                        placeholder="Descripción larga"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2"
+                        value={(c.tags || []).join(', ')}
+                        onChange={e => handleCourseFieldChange(c.id, 'tags', e.target.value.split(',').map(tag => tag.trim()).filter(Boolean))}
+                        placeholder="Tags (separados por coma)"
+                      />
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center">
                     <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest">Currículo</h4>
                     <button onClick={() => addModule(c.id)} className="text-[#d4af37] text-xs font-black uppercase">Añadir Módulo</button>
@@ -234,23 +464,45 @@ const AdminDashboard: React.FC = () => {
                   {c.modules.map(m => (
                     <div key={m.id} className="bg-black/40 p-6 rounded-3xl border border-white/5">
                       <div className="flex justify-between items-center mb-6">
-                        <span className="font-bold text-white">{m.title}</span>
+                        <div className="flex items-center gap-3 w-full">
+                          <input
+                            className="bg-white/5 p-2 rounded-lg outline-none text-sm font-bold flex-1"
+                            value={m.title}
+                            onChange={e => handleModuleTitleChange(c.id, m.id, e.target.value)}
+                          />
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => moveModule(c.id, m.id, 'up')} className="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-lg">↑</button>
+                            <button onClick={() => moveModule(c.id, m.id, 'down')} className="text-[10px] bg-white/10 text-gray-300 px-2 py-1 rounded-lg">↓</button>
+                            <button onClick={() => removeModule(c.id, m.id)} className="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded-lg">Eliminar</button>
+                          </div>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                            <button onClick={() => addLesson(c.id, m.id, 'video')} className="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg">+ Video</button>
                            <button onClick={() => addLesson(c.id, m.id, 'reading')} className="text-[10px] bg-green-500/10 text-green-400 px-3 py-1 rounded-lg">+ Lectura</button>
                            <button onClick={() => addLesson(c.id, m.id, 'link')} className="text-[10px] bg-purple-500/10 text-purple-400 px-3 py-1 rounded-lg">+ Link</button>
                            <button onClick={() => addLesson(c.id, m.id, 'file')} className="text-[10px] bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-lg">+ Archivo</button>
                            <button onClick={() => addLesson(c.id, m.id, 'quiz')} className="text-[10px] bg-pink-500/10 text-pink-400 px-3 py-1 rounded-lg">+ Quiz</button>
+                           <button onClick={() => addLesson(c.id, m.id, 'task')} className="text-[10px] bg-orange-500/10 text-orange-400 px-3 py-1 rounded-lg">+ Tarea</button>
                         </div>
                       </div>
                       <div className="space-y-3">
                         {m.lessons.map(l => (
                           <div key={l.id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl text-sm group">
                              <div className="flex items-center space-x-4">
-                               <i className={`fas ${l.type === 'video' ? 'fa-play' : l.type === 'quiz' ? 'fa-pen-to-square' : l.type === 'link' ? 'fa-link' : l.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-[#d4af37]`}></i>
-                               <span className="font-bold">{l.title}</span>
+                               <i className={`fas ${l.type === 'video' ? 'fa-play' : l.type === 'quiz' ? 'fa-pen-to-square' : l.type === 'link' ? 'fa-link' : l.type === 'file' ? 'fa-file-arrow-down' : l.type === 'task' ? 'fa-list-check' : 'fa-file-alt'} text-[#d4af37]`}></i>
+                               <div>
+                                 <span className="font-bold">{l.title}</span>
+                                 {l.required !== false && (
+                                   <span className="ml-2 text-[10px] uppercase tracking-widest text-green-400 font-black">Obligatoria</span>
+                                 )}
+                               </div>
                              </div>
-                             <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             <div className="flex items-center gap-3">
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'up')} className="text-[10px] bg-white/10 text-gray-400 px-2 py-1 rounded-lg">↑</button>
+                               <button onClick={() => moveLesson(c.id, m.id, l.id, 'down')} className="text-[10px] bg-white/10 text-gray-400 px-2 py-1 rounded-lg">↓</button>
+                               <button onClick={() => removeLesson(c.id, m.id, l.id)} className="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded-lg">Eliminar</button>
+                               <button onClick={() => setEditingLesson({courseId: c.id, moduleId: m.id, lesson: l})} className="text-gray-500 hover:text-white"><i className="fas fa-cog"></i></button>
+                             </div>
                           </div>
                         ))}
                       </div>
@@ -261,6 +513,92 @@ const AdminDashboard: React.FC = () => {
             </div>
           ))}
         </div>
+
+        <section className="mt-16 bg-[#111] p-8 rounded-[40px] border border-white/5">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-black text-white">Contenido del sitio</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-2">Editable sin tocar código</p>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Auto-guardado</span>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={siteContentState.heroTitle}
+              onChange={e => setSiteContentState({ ...siteContentState, heroTitle: e.target.value })}
+              placeholder="Título del hero"
+            />
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={siteContentState.heroCta}
+              onChange={e => setSiteContentState({ ...siteContentState, heroCta: e.target.value })}
+              placeholder="Texto del CTA"
+            />
+            <textarea
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+              value={siteContentState.heroSubtitle}
+              onChange={e => setSiteContentState({ ...siteContentState, heroSubtitle: e.target.value })}
+              placeholder="Subtítulo del hero"
+            />
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={siteContentState.infoTitle}
+              onChange={e => setSiteContentState({ ...siteContentState, infoTitle: e.target.value })}
+              placeholder="Título sección información"
+            />
+            <textarea
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+              value={siteContentState.infoBody}
+              onChange={e => setSiteContentState({ ...siteContentState, infoBody: e.target.value })}
+              placeholder="Texto sección información"
+            />
+            <textarea
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+              value={siteContentState.infoBullets.join('\n')}
+              onChange={e => setSiteContentState({ ...siteContentState, infoBullets: e.target.value.split('\n').filter(Boolean) })}
+              placeholder="Bullets (uno por línea)"
+            />
+          </div>
+        </section>
+
+        <section className="mt-16 bg-[#111] p-8 rounded-[40px] border border-white/5">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-white">Exportar datos</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-2">Listos para Google Sheets</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => downloadCsv('usuarios.csv', [
+                ['Nombre', 'Email', 'País', 'Rol'],
+                ...users.map(user => [user.name, user.email, user.country, user.role || 'USER'])
+              ])}
+              className="bg-white/10 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
+            >
+              Descargar usuarios
+            </button>
+            <button
+              onClick={() => downloadCsv('pagos.csv', [
+                ['ID', 'Usuario', 'Curso', 'Monto', 'Estado', 'Fecha'],
+                ...payments.map(payment => [payment.id, payment.userId, payment.courseId, payment.amount.toString(), payment.status, payment.createdAt])
+              ])}
+              className="bg-white/10 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
+            >
+              Descargar pagos
+            </button>
+            <button
+              onClick={() => downloadCsv('certificados.csv', [
+                ['ID', 'Usuario', 'Curso', 'Fecha', 'Hash'],
+                ...certificates.map(cert => [cert.id, cert.userId, cert.courseId, cert.issuedAt, cert.hash])
+              ])}
+              className="bg-white/10 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
+            >
+              Descargar certificados
+            </button>
+          </div>
+        </section>
 
         <section className="mt-16 bg-[#111] p-8 rounded-[40px] border border-white/5">
           <div className="flex items-center justify-between mb-8">
@@ -306,6 +644,15 @@ const AdminDashboard: React.FC = () => {
                   onChange={e => handleLessonFieldChange('duration', e.target.value)}
                   placeholder="Duración (ej: 12:30)"
                 />
+                <label className="flex items-center gap-3 text-xs text-gray-400 font-bold uppercase">
+                  <input
+                    type="checkbox"
+                    checked={editingLesson.lesson.required !== false}
+                    onChange={e => handleLessonFieldChange('required', e.target.checked)}
+                    className="accent-[#d4af37]"
+                  />
+                  Actividad obligatoria
+                </label>
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-bold mb-2">Tipo de recurso</p>
                   <select
@@ -318,6 +665,7 @@ const AdminDashboard: React.FC = () => {
                     <option value="link">Link</option>
                     <option value="file">Archivo</option>
                     <option value="quiz">Quiz</option>
+                    <option value="task">Tarea</option>
                   </select>
                 </div>
                 {editingLesson.lesson.type === 'video' && (
@@ -329,12 +677,20 @@ const AdminDashboard: React.FC = () => {
                   />
                 )}
                 {editingLesson.lesson.type === 'reading' && (
-                  <textarea
-                    className="w-full bg-white/5 p-4 rounded-xl outline-none h-32"
-                    placeholder="Contenido de lectura"
-                    value={editingLesson.lesson.content || ''}
-                    onChange={e => handleLessonFieldChange('content', e.target.value)}
-                  />
+                  <div className="space-y-4">
+                    <input
+                      className="w-full bg-white/5 p-4 rounded-xl outline-none"
+                      placeholder="URL de lectura externa"
+                      value={editingLesson.lesson.externalLink || ''}
+                      onChange={e => handleLessonFieldChange('externalLink', e.target.value)}
+                    />
+                    <textarea
+                      className="w-full bg-white/5 p-4 rounded-xl outline-none h-32"
+                      placeholder="Contenido de lectura"
+                      value={editingLesson.lesson.content || ''}
+                      onChange={e => handleLessonFieldChange('content', e.target.value)}
+                    />
+                  </div>
                 )}
                 {editingLesson.lesson.type === 'link' && (
                   <input
@@ -350,6 +706,14 @@ const AdminDashboard: React.FC = () => {
                     placeholder="URL del archivo (PDF, Word, etc.)"
                     value={editingLesson.lesson.fileUrl || ''}
                     onChange={e => handleLessonFieldChange('fileUrl', e.target.value)}
+                  />
+                )}
+                {editingLesson.lesson.type === 'task' && (
+                  <textarea
+                    className="w-full bg-white/5 p-4 rounded-xl outline-none h-28"
+                    placeholder="Instrucciones de la tarea"
+                    value={editingLesson.lesson.taskPrompt || ''}
+                    onChange={e => handleLessonFieldChange('taskPrompt', e.target.value)}
                   />
                 )}
                 {editingLesson.lesson.type === 'quiz' && (
@@ -389,6 +753,12 @@ const AdminDashboard: React.FC = () => {
                             ))}
                           </select>
                         </div>
+                        <textarea
+                          className="w-full bg-white/5 p-3 rounded-lg outline-none text-sm"
+                          value={question.explanation || ''}
+                          onChange={e => handleQuizQuestionChange(index, 'explanation', e.target.value)}
+                          placeholder="Explicación de la respuesta"
+                        />
                       </div>
                     ))}
                   </div>
@@ -408,9 +778,12 @@ const AdminDashboard: React.FC = () => {
               <div className="space-y-6">
                 <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="Título" onChange={e => setNewCourse({...newCourse, title: e.target.value})} />
                 <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="Instructor" onChange={e => setNewCourse({...newCourse, instructor: e.target.value})} />
-                <textarea className="w-full bg-white/5 p-5 rounded-2xl outline-none h-32" placeholder="Descripción" onChange={e => setNewCourse({...newCourse, description: e.target.value})}></textarea>
+                <textarea className="w-full bg-white/5 p-5 rounded-2xl outline-none h-24" placeholder="Descripción corta" onChange={e => setNewCourse({...newCourse, description: e.target.value})}></textarea>
+                <textarea className="w-full bg-white/5 p-5 rounded-2xl outline-none h-32" placeholder="Descripción larga" onChange={e => setNewCourse({...newCourse, longDescription: e.target.value})}></textarea>
                 <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="Precio del curso (0 si es gratis)" type="number" onChange={e => setNewCourse({...newCourse, price: Number(e.target.value)})} />
                 <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="Precio del certificado" type="number" onChange={e => setNewCourse({...newCourse, certificatePrice: Number(e.target.value)})} />
+                <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="Tags (separados por coma)" onChange={e => setNewCourse({...newCourse, tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)})} />
+                <input className="w-full bg-white/5 p-5 rounded-2xl outline-none" placeholder="URL del banner" onChange={e => setNewCourse({...newCourse, bannerImage: e.target.value})} />
                 <button onClick={handleAddCourse} className="w-full bg-[#d4af37] text-black py-6 rounded-2xl font-black text-xl">PUBLICAR</button>
                 <button onClick={() => setShowAddForm(false)} className="w-full text-gray-500 py-2">Cerrar</button>
               </div>

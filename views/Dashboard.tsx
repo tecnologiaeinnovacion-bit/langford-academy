@@ -1,19 +1,19 @@
 
 import React from 'react';
-import { getStoredCourses } from '../constants';
 import CourseCard from '../components/CourseCard';
 import { useNavigate } from 'react-router-dom';
-import { getStoredUser, getEnrollments, getCourseProgress } from '../services/storage';
+import { getCourses, getCurrentUser, getEnrollments, getCourseProgress, getCertificates } from '../services/storage';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const user = getStoredUser();
-  const allCourses = getStoredCourses();
+  const user = getCurrentUser();
+  const allCourses = getCourses();
   
   // Obtener IDs de cursos inscritos
-  const enrollmentIds = getEnrollments();
+  const enrollmentIds = user ? getEnrollments(user.id ?? '') : [];
   const enrolledCourses = allCourses.filter(c => enrollmentIds.includes(c.id));
   const otherCourses = allCourses.filter(c => !enrollmentIds.includes(c.id));
+  const certificates = user ? getCertificates().filter(cert => cert.userId === (user.id ?? '')) : [];
 
   if (!user) {
     return (
@@ -44,9 +44,10 @@ const Dashboard: React.FC = () => {
               {enrolledCourses.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {enrolledCourses.map(c => {
-                    const completedLessons = getCourseProgress(c.id);
-                    const totalLessons = c.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-                    const progress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
+                    const completedLessons = user ? getCourseProgress(user.id ?? '', c.id) : [];
+                    const requiredIds = c.modules.flatMap(m => m.lessons).filter(lesson => lesson.required !== false).map(lesson => lesson.id);
+                    const totalLessons = requiredIds.length;
+                    const progress = totalLessons > 0 ? Math.round((completedLessons.filter(id => requiredIds.includes(id)).length / totalLessons) * 100) : 0;
 
                     return (
                       <div key={c.id} className="bg-[#111] p-2 rounded-[32px] border border-white/5">
@@ -74,6 +75,29 @@ const Dashboard: React.FC = () => {
               </div>
             </section>
           </div>
+          <aside className="space-y-10">
+            <div className="bg-[#111] p-8 rounded-[32px] border border-white/5">
+              <h3 className="text-lg font-black text-white mb-4">Mis certificados</h3>
+              {certificates.length > 0 ? (
+                <div className="space-y-4">
+                  {certificates.map(cert => (
+                    <div key={cert.id} className="bg-black/50 p-4 rounded-2xl border border-white/5">
+                      <p className="text-sm font-bold text-white">{cert.id}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-gray-500">Emitido {new Date(cert.issuedAt).toLocaleDateString('es-CO')}</p>
+                      <button
+                        onClick={() => navigate(`/certificates/${cert.id}`)}
+                        className="mt-3 text-xs font-black text-[#d4af37] uppercase tracking-widest"
+                      >
+                        Verificar certificado
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Completa un curso y genera tu certificado.</p>
+              )}
+            </div>
+          </aside>
         </div>
       </div>
     </div>

@@ -1,64 +1,37 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { getStoredCourses } from '../constants';
-import PSEModal from '../components/PSEModal';
-import { addEnrollment, getEnrollments, getStoredUser } from '../services/storage';
+import React, { useMemo, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getCourses, getCurrentUser, addEnrollment, getEnrollments, getCourseProgress } from '../services/storage';
 
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const paymentStatus = queryParams.get('payment');
-  const courses = getStoredCourses();
+  const courses = getCourses();
   const course = courses.find(c => c.id === id);
-  const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [isPSEOpen, setIsPSEOpen] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [paymentError, setPaymentError] = useState('');
-  const paymentUrl = import.meta.env.VITE_PSE_PAYMENT_URL as string | undefined;
-  const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/course/${course?.id}?payment=success` : '';
+  const [activeModule, setActiveModule] = useState<string | null>(course?.modules[0]?.id ?? null);
+  const user = getCurrentUser();
+  const enrollmentIds = user ? getEnrollments(user.id ?? '') : [];
+  const isEnrolled = user ? enrollmentIds.includes(course?.id ?? '') : false;
+  const completedLessons = user && course ? getCourseProgress(user.id ?? '', course.id) : [];
 
-  useEffect(() => {
-    const enrollments = getEnrollments();
-    if (course && enrollments.includes(course.id)) {
-      setIsEnrolled(true);
-    }
-    if (course && course.modules.length > 0) {
-      setActiveModule(course.modules[0].id);
-    }
-  }, [course]);
-
-  useEffect(() => {
-    if (!course || paymentStatus !== 'success') return;
-    addEnrollment(course.id);
-    setIsEnrolled(true);
-    navigate(`/learn/${course.id}`, { replace: true });
-  }, [course, navigate, paymentStatus]);
+  const progressPercent = useMemo(() => {
+    if (!course || !user) return 0;
+    const completed = getCourseProgress(user.id ?? '', course.id);
+    const requiredIds = course.modules.flatMap(m => m.lessons).filter(lesson => lesson.required !== false).map(lesson => lesson.id);
+    const total = requiredIds.length;
+    const done = completed.filter(id => requiredIds.includes(id)).length;
+    return total > 0 ? Math.round((done / total) * 100) : 0;
+  }, [course, user]);
 
   if (!course) return <div className="p-10 text-center font-bold">Curso no encontrado</div>;
 
   const handleEnrollClick = () => {
-    setPaymentError('');
-    const user = getStoredUser();
     if (!user) {
       navigate('/login');
       return;
     }
-
-    addEnrollment(course.id);
-    setIsEnrolled(true);
-
-    if (course.price > 0) {
-      if (!paymentUrl) {
-        setPaymentError('Configura VITE_PSE_PAYMENT_URL para habilitar pagos con PSE.');
-        return;
-      }
-      setIsPSEOpen(true);
-    } else {
-      navigate(`/learn/${course.id}`);
-    }
+    addEnrollment(user.id ?? '', course.id);
+    navigate(`/learn/${course.id}`);
   };
 
   const handleLessonClick = (lessonId: string) => {
@@ -72,7 +45,10 @@ const CourseDetail: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 bg-white">
       {/* Header Premium */}
-      <div className="bg-[#00255d] text-white py-20 px-4 relative overflow-hidden">
+      <div
+        className="bg-[#00255d] text-white py-20 px-4 relative overflow-hidden"
+        style={course.bannerImage ? { backgroundImage: `linear-gradient(rgba(0,37,93,0.85), rgba(0,37,93,0.95)), url(${course.bannerImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className="absolute right-0 top-0 w-1/2 h-full opacity-5 pointer-events-none">
            <i className="fas fa-graduation-cap text-[300px] -rotate-12 translate-x-20 translate-y-20"></i>
         </div>
@@ -88,6 +64,15 @@ const CourseDetail: React.FC = () => {
             <p className="text-xl text-blue-100/70 mb-12 max-w-2xl font-medium leading-relaxed italic border-l-4 border-[#d4af37] pl-6">
               {course.description}
             </p>
+            {course.tags && course.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-10">
+                {course.tags.map(tag => (
+                  <span key={tag} className="text-[10px] uppercase tracking-widest font-black text-cyan-200 border border-cyan-200/30 px-3 py-1 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
             
             <div className="flex flex-col sm:flex-row items-center gap-6">
               {isEnrolled ? (
@@ -102,12 +87,16 @@ const CourseDetail: React.FC = () => {
                   onClick={handleEnrollClick}
                   className="w-full sm:w-auto bg-[#d4af37] text-black px-12 py-5 rounded-2xl font-black text-xl shadow-[0_20px_40px_rgba(212,175,55,0.3)] hover:scale-105 transition-all uppercase tracking-widest"
                 >
-                  {course.price > 0 ? `Inscribirme por $${course.price.toLocaleString('es-CO')}` : 'Inscribirse Gratis'}
+                  Inscribirme Gratis
                 </button>
               )}
-              {paymentError && (
-                <p className="text-xs text-red-200 font-semibold">{paymentError}</p>
-              )}
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-widest font-black text-blue-100/70">Certificación con PSE</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-5" />
+                  <span className="text-xs font-bold text-cyan-100">Pago seguro al finalizar</span>
+                </div>
+              </div>
               <div className="text-left">
                 <p className="text-cyan-400 font-black text-xl">{(course.studentsCount + 2450).toLocaleString()}</p>
                 <p className="text-[10px] text-blue-100/50 font-black uppercase tracking-widest">Estudiantes Activos</p>
@@ -159,7 +148,7 @@ const CourseDetail: React.FC = () => {
                           >
                             <div className="flex items-center space-x-4">
                               <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 group-hover/lesson:bg-[#d4af37]/10 group-hover/lesson:text-[#d4af37] transition-all">
-                                <i className={`fas ${lesson.type === 'video' ? 'fa-play' : lesson.type === 'quiz' ? 'fa-pen-to-square' : lesson.type === 'link' ? 'fa-link' : lesson.type === 'file' ? 'fa-file-arrow-down' : 'fa-file-alt'} text-xs`}></i>
+                                <i className={`fas ${lesson.type === 'video' ? 'fa-play' : lesson.type === 'quiz' ? 'fa-pen-to-square' : lesson.type === 'link' ? 'fa-link' : lesson.type === 'file' ? 'fa-file-arrow-down' : lesson.type === 'task' ? 'fa-list-check' : 'fa-file-alt'} text-xs`}></i>
                               </div>
                               <div className="text-left">
                                 <p className="font-bold text-gray-800 text-sm group-hover/lesson:text-[#d4af37] transition-colors">{lesson.title}</p>
@@ -167,7 +156,9 @@ const CourseDetail: React.FC = () => {
                               </div>
                             </div>
                             <div className="opacity-0 group-hover/lesson:opacity-100 transition-opacity">
-                               <span className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest">Entrar Clase</span>
+                               <span className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest">
+                                 {completedLessons.includes(lesson.id) ? 'Completado' : 'Entrar Clase'}
+                               </span>
                             </div>
                           </button>
                         ))}
@@ -202,31 +193,33 @@ const CourseDetail: React.FC = () => {
                 </ul>
              </div>
 
+             <div className="bg-white p-8 rounded-[32px] border border-gray-200 shadow-sm">
+                <p className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-3">Método de pago</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center">
+                    <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-6" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">Pago Seguro en Línea</p>
+                    <p className="text-xs text-gray-500">Pago inmediato con bancos colombianos y retorno automático.</p>
+                  </div>
+                </div>
+              </div>
+
              <div className="bg-[#d4af37]/10 p-10 rounded-[40px] border border-[#d4af37]/30 text-center">
                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Certificación Oficial</p>
                 <p className="text-4xl font-black text-gray-900 mb-6">${course.certificatePrice.toLocaleString('es-CO')}<span className="text-sm text-gray-500">/cop</span></p>
                 <p className="text-xs text-gray-600 font-medium mb-8 leading-relaxed">Válido para perfiles de LinkedIn y hojas de vida internacionales.</p>
                 <button 
-                  onClick={handleEnrollClick}
+                  onClick={() => navigate(`/learn/${course.id}`)}
                   className="w-full bg-[#00255d] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
                 >
-                  Garantizar Certificado
+                  {isEnrolled ? `Continuar (${progressPercent}%)` : 'Empieza el curso'}
                 </button>
              </div>
           </div>
         </div>
       </div>
-
-      {paymentUrl && (
-        <PSEModal 
-          isOpen={isPSEOpen} 
-          onClose={() => setIsPSEOpen(false)} 
-          amount={course.price || 0}
-          courseTitle={course.title}
-          paymentUrl={paymentUrl}
-          returnUrl={returnUrl}
-        />
-      )}
     </div>
   );
 };

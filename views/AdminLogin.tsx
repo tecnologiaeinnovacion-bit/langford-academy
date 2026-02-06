@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { findUserByEmail, setCurrentUser } from '../services/storage';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -9,12 +10,13 @@ const AdminLogin: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (creds.user === 'admin' && creds.pass === 'admin123') {
-      localStorage.setItem('langford_admin', 'true');
-      navigate('/admin/dashboard');
-    } else {
+    const user = findUserByEmail(creds.user);
+    if (!user || user.password !== creds.pass || user.role !== 'ADMIN') {
       setError('Credenciales inválidas');
+      return;
     }
+    setCurrentUser({ ...user, isLoggedIn: true });
+    navigate('/admin/dashboard');
   };
 
   return (
@@ -27,7 +29,7 @@ const AdminLogin: React.FC = () => {
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-xs font-black text-gray-500 uppercase mb-2 tracking-widest">Usuario Administrador</label>
+            <label className="block text-xs font-black text-gray-500 uppercase mb-2 tracking-widest">Correo Administrador</label>
             <input 
               type="text" required
               className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"

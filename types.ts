@@ -1,11 +1,12 @@
 
-export type ResourceType = 'video' | 'quiz' | 'reading' | 'link' | 'file';
+export type ResourceType = 'video' | 'quiz' | 'reading' | 'link' | 'file' | 'task';
 
 export interface EvaluationQuestion {
   id: string;
   question: string;
   options: string[];
   correctAnswer: number;
+  explanation?: string;
 }
 
 export interface Lesson {
@@ -13,11 +14,13 @@ export interface Lesson {
   title: string;
   duration: string;
   type: ResourceType;
+  required?: boolean;
   content?: string;
   videoUrl?: string;
   fileUrl?: string;
   externalLink?: string;
   evaluation?: EvaluationQuestion[];
+  taskPrompt?: string;
 }
 
 export interface Module {
@@ -45,6 +48,8 @@ export interface Course {
   certificatePrice: number; // Precio para descargar el certificado
   sponsoredBy?: string;
   sponsorLogo?: string;
+  tags?: string[];
+  bannerImage?: string;
 }
 
 export interface User {
@@ -56,4 +61,36 @@ export interface User {
   provider?: 'local' | 'google';
   password?: string;
   isLoggedIn: boolean;
+  role?: 'USER' | 'ADMIN';
+}
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED';
+
+export interface PaymentRecord {
+  id: string;
+  userId: string;
+  courseId: string;
+  amount: number;
+  status: PaymentStatus;
+  provider: 'MockPSE';
+  token: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CertificateRecord {
+  id: string;
+  userId: string;
+  courseId: string;
+  issuedAt: string;
+  hash: string;
+}
+
+export interface SiteContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroCta: string;
+  infoTitle: string;
+  infoBody: string;
+  infoBullets: string[];
 }

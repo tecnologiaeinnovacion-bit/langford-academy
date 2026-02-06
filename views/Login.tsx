@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { findUserByEmail, setStoredUser, upsertUser } from '../services/storage';
+import { findUserByEmail, setCurrentUser, upsertUser } from '../services/storage';
 import { initGoogleSignIn } from '../services/googleAuth';
 
 const Login: React.FC = () => {
@@ -21,10 +21,11 @@ const Login: React.FC = () => {
       phone: '',
       country: 'Colombia',
       provider: 'google' as const,
-      isLoggedIn: true
+      isLoggedIn: true,
+      role: 'USER' as const
     };
     upsertUser(user);
-    setStoredUser(user);
+    setCurrentUser(user);
     navigate('/dashboard');
   };
 
@@ -68,7 +69,7 @@ const Login: React.FC = () => {
       setErrorMessage('La contraseña no es correcta. Intenta nuevamente.');
       return;
     }
-    setStoredUser({ ...user, isLoggedIn: true });
+    setCurrentUser({ ...user, isLoggedIn: true });
     navigate('/dashboard');
   };
 

@@ -10,6 +10,7 @@ import Register from './views/Register';
 import Login from './views/Login';
 import AdminLogin from './views/AdminLogin';
 import AdminDashboard from './views/AdminDashboard';
+import CertificateVerification from './views/CertificateVerification';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -32,6 +33,7 @@ const App: React.FC = () => {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/certificates/:id" element={<CertificateVerification />} />
         </Routes>
       </main>
       

@@ -28,6 +28,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, enrolled, progress }) =
           {course.title}
         </h3>
         <p className="text-sm text-gray-500 mb-6 font-medium italic">Con {course.instructor}</p>
+        {course.tags && course.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {course.tags.slice(0, 3).map(tag => (
+              <span key={tag} className="text-[10px] uppercase tracking-widest font-black text-gray-400 border border-white/10 px-2 py-1 rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         
         <div className="mt-auto">
           {enrolled ? (

@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { clearStoredUser, getStoredUser } from '../services/storage';
+import { clearCurrentUser, getCurrentUser } from '../services/storage';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const user = getStoredUser();
+  const user = getCurrentUser();
   
   const handleLogout = () => {
-    clearStoredUser();
+    clearCurrentUser();
     navigate('/');
   };
 
@@ -23,6 +23,9 @@ const Navbar: React.FC = () => {
             <div className="hidden md:ml-12 md:flex md:space-x-8">
               <Link to="/" className="text-white hover:text-[#d4af37] px-1 pt-1 text-sm font-bold transition-colors">Explorar</Link>
               <Link to="/dashboard" className="text-gray-400 hover:text-[#d4af37] px-1 pt-1 text-sm font-medium transition-colors">Mi Aprendizaje</Link>
+              {user?.role === 'ADMIN' && (
+                <Link to="/admin/dashboard" className="text-gray-400 hover:text-[#d4af37] px-1 pt-1 text-sm font-medium transition-colors">Admin</Link>
+              )}
             </div>
           </div>
           
