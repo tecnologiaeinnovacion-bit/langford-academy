@@ -138,9 +138,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   heroTitle: 'Educación premium para carreras reales',
   heroSubtitle: 'Aprendizaje guiado, contenidos gratuitos y certificación inmediata cuando completes el programa.',
   heroCta: 'Explorar programas',
-  infoTitle: 'Tu avance es el centro de todo',
-  infoBody: 'Cada curso es secuencial, con actividades obligatorias y feedback inmediato. Cuando terminas, puedes pagar tu certificado y descargarlo al instante.',
-  infoBullets: ['Progreso visible por módulo y curso', 'Pagos PSE listos para activar', 'Certificados verificables en línea'],
+  infoTitle: '',
+  infoBody: '',
+  infoBullets: [],
   sponsorsTitle: 'Nuestros aliados estratégicos',
   sponsorsLogos: [
     'https://logo.clearbit.com/google.com',

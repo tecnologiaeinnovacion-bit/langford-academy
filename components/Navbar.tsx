@@ -57,6 +57,12 @@ const Navbar: React.FC = () => {
                 >
                   Ingresar
                 </button>
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#d4af37]"
+                >
+                  Admin
+                </button>
                 <button 
                   onClick={() => navigate('/register')}
                   className="bg-[#d4af37] hover:bg-[#f1d279] text-black px-7 py-2.5 rounded-full font-black text-sm transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:scale-105"

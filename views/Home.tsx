@@ -158,32 +158,46 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-24 bg-black border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { title: siteContent.infoTitle, text: siteContent.infoBody },
-              { title: 'Pagos PSE integrados', text: 'Transacciones seguras para certificados, con retorno automático a la plataforma.' },
-              { title: 'Administración fácil', text: 'Panel editable para mover imágenes, actualizar nombres y ajustar lecturas en segundos.' }
-            ].map((card) => (
-              <div key={card.title} className="bg-[#0f0f0f] p-8 rounded-3xl border border-white/10">
-                <h3 className="text-lg font-black text-white mb-4">{card.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{card.text}</p>
-                {card.title === siteContent.infoTitle && siteContent.infoBullets.length > 0 && (
-                  <ul className="mt-4 space-y-2 text-xs text-gray-500">
-                    {siteContent.infoBullets.map((bullet) => (
-                      <li key={bullet} className="flex items-center gap-2">
-                        <i className="fas fa-check text-[#d4af37]"></i>
-                        <span>{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
+      {(siteContent.infoTitle || siteContent.infoBody || siteContent.infoBullets.length > 0) && (
+        <section className="py-24 bg-black border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="bg-gradient-to-br from-[#0f0f0f] to-[#090909] border border-white/10 rounded-[48px] p-12 md:p-16 shadow-2xl">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[5px] text-gray-500 font-black">Información</p>
+                  <h3 className="text-3xl md:text-4xl font-black text-white mt-3">{siteContent.infoTitle}</h3>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                  <i className="fas fa-circle-info text-[#d4af37]"></i>
+                  <span>Contenido institucional editable</span>
+                </div>
+              </div>
+              <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-10">
+                <div>
+                  <p className="text-sm md:text-base text-gray-400 leading-relaxed whitespace-pre-line">
+                    {siteContent.infoBody}
+                  </p>
+                </div>
+                {siteContent.infoBullets.length > 0 && (
+                  <div className="bg-black/40 border border-white/10 rounded-3xl p-6">
+                    <h4 className="text-sm font-black text-[#d4af37] uppercase tracking-widest mb-4">Destacados</h4>
+                    <ul className="space-y-3 text-sm text-gray-300">
+                      {siteContent.infoBullets.map((bullet) => (
+                        <li key={bullet} className="flex items-start gap-3">
+                          <span className="w-6 h-6 rounded-full bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37] text-xs">
+                            <i className="fas fa-check"></i>
+                          </span>
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Featured Courses */}
       <section className="max-w-7xl mx-auto px-4 py-24">
