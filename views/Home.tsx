@@ -1,6 +1,6 @@
 
-import React, { useMemo, useState } from 'react';
-import { TESTIMONIALS, PARTNERS } from '../constants';
+import React, { useEffect, useMemo, useState } from 'react';
+import { TESTIMONIALS } from '../constants';
 import CourseCard from '../components/CourseCard';
 import { useNavigate } from 'react-router-dom';
 import { getCourses, getSiteContent } from '../services/storage';
@@ -8,12 +8,18 @@ import { getCourses, getSiteContent } from '../services/storage';
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const courses = getCourses();
-  const siteContent = getSiteContent();
+  const [siteContent, setSiteContent] = useState(getSiteContent());
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState('Todos');
   const heroWords = siteContent.heroTitle.split(' ');
   const heroLeading = heroWords.slice(0, 2).join(' ');
   const heroTrailing = heroWords.slice(2).join(' ');
+  useEffect(() => {
+    const handler = () => setSiteContent(getSiteContent());
+    window.addEventListener('site-content-updated', handler);
+    return () => window.removeEventListener('site-content-updated', handler);
+  }, []);
+
   const tags = useMemo(() => {
     const tagSet = new Set<string>();
     courses.forEach(course => course.tags?.forEach(tag => tagSet.add(tag)));
@@ -72,35 +78,35 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
-              <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Plataforma moderna</p>
-                    <h3 className="text-2xl font-black text-white mt-2">Panel de aprendizaje</h3>
-                  </div>
-                  <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Nuevo</span>
+            <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{siteContent.promosTitle}</p>
+                  <h3 className="text-2xl font-black text-white mt-2">{siteContent.promosTitle}</h3>
                 </div>
-              <div className="space-y-6">
-                {['Ruta personalizada de estudio', 'Clases en vivo + recursos descargables', 'Certificados verificables'].map((item) => (
+                <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Actualizado</span>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed mb-8">{siteContent.promosBody}</p>
+              <div className="space-y-4">
+                {siteContent.promosHighlights.map((item) => (
                   <div key={item} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37]">
-                      <i className="fas fa-check"></i>
+                      <i className="fas fa-star"></i>
                     </div>
                     <div>
                       <p className="font-bold text-white">{item}</p>
-                      <p className="text-xs text-gray-500 mt-1">Todo el contenido se administra en un panel editable en tiempo real.</p>
                     </div>
                   </div>
                 ))}
               </div>
               <div className="mt-10 bg-black/50 rounded-2xl p-5 border border-white/10">
-                <p className="text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Pago destacado</p>
+                <p className="text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Pagos disponibles</p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img src="https://www.pse.com.co/o/pse-home-theme/images/logo_pse_footer.png" alt="PSE" className="h-6" />
-                    <span className="text-sm font-bold text-white">PSE disponible en cursos premium</span>
+                    <span className="text-sm font-bold text-white">Certificados con PSE</span>
                   </div>
-                  <span className="text-[10px] text-[#d4af37] font-black uppercase tracking-widest">Instantáneo</span>
+                  <span className="text-[10px] text-[#d4af37] font-black uppercase tracking-widest">Seguro</span>
                 </div>
               </div>
             </div>
@@ -111,9 +117,9 @@ const Home: React.FC = () => {
       {/* Partners Section */}
       <section className="py-16 bg-black border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4">
-          <p className="text-center text-[10px] font-black uppercase tracking-[5px] text-gray-500 mb-10">Nuestros egresados trabajan en</p>
+          <p className="text-center text-[10px] font-black uppercase tracking-[5px] text-gray-500 mb-10">{siteContent.sponsorsTitle}</p>
           <div className="flex flex-wrap justify-center items-center gap-12 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-            {PARTNERS.map((p, i) => (
+            {siteContent.sponsorsLogos.map((p, i) => (
               <img key={i} src={p} alt="Partner" className="h-8 md:h-10" />
             ))}
           </div>
@@ -128,9 +134,9 @@ const Home: React.FC = () => {
                 <i className="fas fa-certificate text-[150px] text-[#d4af37]"></i>
              </div>
              <div className="flex-1 relative z-10">
-                <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#d4af37]">Beca Universal Langford</h2>
+                <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#d4af37]">{siteContent.scholarshipTitle}</h2>
                 <p className="text-xl text-gray-300 leading-relaxed mb-8">
-                  Creemos que el talento es universal, pero las oportunidades no. Por eso, el acceso a todo nuestro material de estudio es **GRATUITO**. Solo pagas por la validación técnica y la emisión de tu certificado físico y digital al finalizar.
+                  {siteContent.scholarshipBody}
                 </p>
                 <ul className="space-y-4 mb-10">
                   <li className="flex items-center space-x-3 text-white font-bold">
@@ -145,8 +151,8 @@ const Home: React.FC = () => {
              </div>
              <div className="w-full md:w-80 bg-black/40 backdrop-blur-xl p-8 rounded-3xl border border-white/10 text-center">
                 <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Costo del Certificado</p>
-                <p className="text-5xl font-black text-[#d4af37] mb-6">$150.000<span className="text-sm font-bold text-gray-400">/cop</span></p>
-                <button onClick={() => navigate('/register')} className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#d4af37] transition-all">Empieza Hoy</button>
+                <p className="text-5xl font-black text-[#d4af37] mb-6">{siteContent.scholarshipPrice}</p>
+                <button onClick={() => navigate('/register')} className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#d4af37] transition-all">{siteContent.scholarshipCta}</button>
              </div>
           </div>
         </div>

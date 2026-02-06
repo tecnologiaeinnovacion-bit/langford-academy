@@ -140,7 +140,43 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   heroCta: 'Explorar programas',
   infoTitle: 'Tu avance es el centro de todo',
   infoBody: 'Cada curso es secuencial, con actividades obligatorias y feedback inmediato. Cuando terminas, puedes pagar tu certificado y descargarlo al instante.',
-  infoBullets: ['Progreso visible por módulo y curso', 'Pagos PSE listos para activar', 'Certificados verificables en línea']
+  infoBullets: ['Progreso visible por módulo y curso', 'Pagos PSE listos para activar', 'Certificados verificables en línea'],
+  sponsorsTitle: 'Nuestros aliados estratégicos',
+  sponsorsLogos: [
+    'https://logo.clearbit.com/google.com',
+    'https://logo.clearbit.com/microsoft.com',
+    'https://logo.clearbit.com/amazon.com',
+    'https://logo.clearbit.com/goldmansachs.com'
+  ],
+  scholarshipTitle: 'Beca Universal Langford',
+  scholarshipBody: 'Creemos que el talento es universal, pero las oportunidades no. Por eso, el acceso a todo nuestro material de estudio es gratuito. Solo pagas por la validación técnica y la emisión de tu certificado físico y digital al finalizar.',
+  scholarshipPrice: '$150.000 / COP',
+  scholarshipCta: 'Empieza hoy',
+  promosTitle: 'Promociones y convenios',
+  promosBody: 'Beneficios especiales para estudiantes, egresados y aliados corporativos.',
+  promosHighlights: ['Convenios institucionales activos', 'Mentorías y acompañamiento personalizado', 'Acceso preferencial a certificaciones'],
+  contactTitle: 'Contáctanos',
+  contactBody: 'Síguenos en redes sociales\nContáctanos\nWhatsApp: 3159797999\nCorreo notificaciones judiciales: notificacionjudicial@langford.edu.co',
+  addressTitle: 'Dirección',
+  addressBody: '“Convenio estudiantil entre Langford y Sapienza — CTES.\nBrindamos acompañamiento y apoyo estudiantil en nuestra sede ubicada en el tercer piso, Dirección Localidad Barrios Unidos, Barrio Concepción Norte, Bogotá D.C., Carrera 14A #71–29.”',
+  legalTitle: 'Información legal',
+  legalLinks: [
+    'FPQRS',
+    'Derechos pecuniarios',
+    'Política de tratamiento de datos',
+    'Estatutos, Políticas y Reglamentos',
+    'Términos y condiciones',
+    'Transparencia y acceso a la información pública',
+    'Política de Derechos de Autor',
+    'Normativa Institucional',
+    'Proceso de rendición de cuentas',
+    'Plan estratégico de desarrollo',
+    'Atención y servicio ciudadano',
+    'Directorio'
+  ],
+  hoursTitle: 'Horario de atención',
+  hoursBody: 'Lunes a viernes de 8:00 a.m. a 5:00 p.m. y sábados de 8:00 a.m. a 12:00 p.m.',
+  footerNote: 'Corporación Tecnológica de Educación Superior Sapienza – CTES.\nInstitución de Educación para el Trabajo y el Desarrollo Humano sujeta a inspección y vigilancia de la Secretaría de Educación.\nResolución 08-122 del 6 de noviembre de 2025.'
 };
 
 export const TESTIMONIALS = [
@@ -148,9 +184,4 @@ export const TESTIMONIALS = [
   { name: 'Carlos Slim', role: 'Analista en JP Morgan', text: 'La flexibilidad y la calidad de los mentores es inigualable.' }
 ];
 
-export const PARTNERS = [
-  'https://logo.clearbit.com/google.com',
-  'https://logo.clearbit.com/microsoft.com',
-  'https://logo.clearbit.com/amazon.com',
-  'https://logo.clearbit.com/goldmansachs.com'
-];
+export const PARTNERS = DEFAULT_SITE_CONTENT.sponsorsLogos;

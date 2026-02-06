@@ -105,6 +105,9 @@ export const getSiteContent = (): SiteContent => cache.siteContent;
 export const setSiteContent = (content: SiteContent) => {
   cache.siteContent = content;
   persist(STORAGE_KEYS.siteContent, content);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('site-content-updated'));
+  }
 };
 
 export const getUsers = (): User[] => cache.users;

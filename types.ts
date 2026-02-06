@@ -93,4 +93,22 @@ export interface SiteContent {
   infoTitle: string;
   infoBody: string;
   infoBullets: string[];
+  sponsorsTitle: string;
+  sponsorsLogos: string[];
+  scholarshipTitle: string;
+  scholarshipBody: string;
+  scholarshipPrice: string;
+  scholarshipCta: string;
+  promosTitle: string;
+  promosBody: string;
+  promosHighlights: string[];
+  contactTitle: string;
+  contactBody: string;
+  addressTitle: string;
+  addressBody: string;
+  legalTitle: string;
+  legalLinks: string[];
+  hoursTitle: string;
+  hoursBody: string;
+  footerNote: string;
 }
