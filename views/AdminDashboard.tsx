@@ -523,150 +523,222 @@ const AdminDashboard: React.FC = () => {
             <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Auto-guardado</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.heroTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, heroTitle: e.target.value })}
-              placeholder="Título del hero"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.heroCta}
-              onChange={e => setSiteContentState({ ...siteContentState, heroCta: e.target.value })}
-              placeholder="Texto del CTA"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.heroSubtitle}
-              onChange={e => setSiteContentState({ ...siteContentState, heroSubtitle: e.target.value })}
-              placeholder="Subtítulo del hero"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.footerNote}
-              onChange={e => setSiteContentState({ ...siteContentState, footerNote: e.target.value })}
-              placeholder="Nota institucional del footer"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.infoTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, infoTitle: e.target.value })}
-              placeholder="Título sección información"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.infoBody}
-              onChange={e => setSiteContentState({ ...siteContentState, infoBody: e.target.value })}
-              placeholder="Texto sección información"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.infoBullets.join('\n')}
-              onChange={e => setSiteContentState({ ...siteContentState, infoBullets: e.target.value.split('\n').filter(Boolean) })}
-              placeholder="Bullets (uno por línea)"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.sponsorsTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, sponsorsTitle: e.target.value })}
-              placeholder="Título patrocinadores"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.sponsorsLogos.join('\n')}
-              onChange={e => setSiteContentState({ ...siteContentState, sponsorsLogos: e.target.value.split('\n').filter(Boolean) })}
-              placeholder="Logos patrocinadores (1 URL por línea)"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.scholarshipTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, scholarshipTitle: e.target.value })}
-              placeholder="Título becas"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.scholarshipBody}
-              onChange={e => setSiteContentState({ ...siteContentState, scholarshipBody: e.target.value })}
-              placeholder="Texto becas"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.scholarshipPrice}
-              onChange={e => setSiteContentState({ ...siteContentState, scholarshipPrice: e.target.value })}
-              placeholder="Precio certificado"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.scholarshipCta}
-              onChange={e => setSiteContentState({ ...siteContentState, scholarshipCta: e.target.value })}
-              placeholder="Texto botón becas"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.promosTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, promosTitle: e.target.value })}
-              placeholder="Título promociones"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.promosBody}
-              onChange={e => setSiteContentState({ ...siteContentState, promosBody: e.target.value })}
-              placeholder="Texto promociones"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.promosHighlights.join('\n')}
-              onChange={e => setSiteContentState({ ...siteContentState, promosHighlights: e.target.value.split('\n').filter(Boolean) })}
-              placeholder="Highlights promociones (uno por línea)"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.contactTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, contactTitle: e.target.value })}
-              placeholder="Título contacto"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.contactBody}
-              onChange={e => setSiteContentState({ ...siteContentState, contactBody: e.target.value })}
-              placeholder="Texto contacto"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.addressTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, addressTitle: e.target.value })}
-              placeholder="Título dirección"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.addressBody}
-              onChange={e => setSiteContentState({ ...siteContentState, addressBody: e.target.value })}
-              placeholder="Texto dirección"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.legalTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, legalTitle: e.target.value })}
-              placeholder="Título legal"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.legalLinks.join('\n')}
-              onChange={e => setSiteContentState({ ...siteContentState, legalLinks: e.target.value.split('\n').filter(Boolean) })}
-              placeholder="Links legales (uno por línea)"
-            />
-            <input
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
-              value={siteContentState.hoursTitle}
-              onChange={e => setSiteContentState({ ...siteContentState, hoursTitle: e.target.value })}
-              placeholder="Título horario"
-            />
-            <textarea
-              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
-              value={siteContentState.hoursBody}
-              onChange={e => setSiteContentState({ ...siteContentState, hoursBody: e.target.value })}
-              placeholder="Texto horario"
-            />
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Hero - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.heroTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, heroTitle: e.target.value })}
+                placeholder="Título del hero"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Hero - CTA</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.heroCta}
+                onChange={e => setSiteContentState({ ...siteContentState, heroCta: e.target.value })}
+                placeholder="Texto del CTA"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Hero - subtítulo</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.heroSubtitle}
+                onChange={e => setSiteContentState({ ...siteContentState, heroSubtitle: e.target.value })}
+                placeholder="Subtítulo del hero"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Footer - nota institucional</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.footerNote}
+                onChange={e => setSiteContentState({ ...siteContentState, footerNote: e.target.value })}
+                placeholder="Nota institucional del footer"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Información - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.infoTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, infoTitle: e.target.value })}
+                placeholder="Título sección información"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Información - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.infoBody}
+                onChange={e => setSiteContentState({ ...siteContentState, infoBody: e.target.value })}
+                placeholder="Texto sección información"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Información - bullets</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.infoBullets.join('\n')}
+                onChange={e => setSiteContentState({ ...siteContentState, infoBullets: e.target.value.split('\n').filter(Boolean) })}
+                placeholder="Bullets (uno por línea)"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Patrocinadores - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.sponsorsTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, sponsorsTitle: e.target.value })}
+                placeholder="Título patrocinadores"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Patrocinadores - logos</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.sponsorsLogos.join('\n')}
+                onChange={e => setSiteContentState({ ...siteContentState, sponsorsLogos: e.target.value.split('\n').filter(Boolean) })}
+                placeholder="Logos patrocinadores (1 URL por línea)"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Becas - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.scholarshipTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, scholarshipTitle: e.target.value })}
+                placeholder="Título becas"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Becas - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.scholarshipBody}
+                onChange={e => setSiteContentState({ ...siteContentState, scholarshipBody: e.target.value })}
+                placeholder="Texto becas"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Becas - precio</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.scholarshipPrice}
+                onChange={e => setSiteContentState({ ...siteContentState, scholarshipPrice: e.target.value })}
+                placeholder="Precio certificado"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Becas - CTA</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.scholarshipCta}
+                onChange={e => setSiteContentState({ ...siteContentState, scholarshipCta: e.target.value })}
+                placeholder="Texto botón becas"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Promociones - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.promosTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, promosTitle: e.target.value })}
+                placeholder="Título promociones"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Promociones - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.promosBody}
+                onChange={e => setSiteContentState({ ...siteContentState, promosBody: e.target.value })}
+                placeholder="Texto promociones"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Promociones - highlights</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.promosHighlights.join('\n')}
+                onChange={e => setSiteContentState({ ...siteContentState, promosHighlights: e.target.value.split('\n').filter(Boolean) })}
+                placeholder="Highlights promociones (uno por línea)"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Contacto - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.contactTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, contactTitle: e.target.value })}
+                placeholder="Título contacto"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Contacto - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.contactBody}
+                onChange={e => setSiteContentState({ ...siteContentState, contactBody: e.target.value })}
+                placeholder="Texto contacto"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Dirección - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.addressTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, addressTitle: e.target.value })}
+                placeholder="Título dirección"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Dirección - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.addressBody}
+                onChange={e => setSiteContentState({ ...siteContentState, addressBody: e.target.value })}
+                placeholder="Texto dirección"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Legal - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.legalTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, legalTitle: e.target.value })}
+                placeholder="Título legal"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Legal - enlaces</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.legalLinks.join('\n')}
+                onChange={e => setSiteContentState({ ...siteContentState, legalLinks: e.target.value.split('\n').filter(Boolean) })}
+                placeholder="Links legales (uno por línea)"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Horario - título</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.hoursTitle}
+                onChange={e => setSiteContentState({ ...siteContentState, hoursTitle: e.target.value })}
+                placeholder="Título horario"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Horario - texto</label>
+              <textarea
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2 h-24"
+                value={siteContentState.hoursBody}
+                onChange={e => setSiteContentState({ ...siteContentState, hoursBody: e.target.value })}
+                placeholder="Texto horario"
+              />
+            </div>
           </div>
         </section>
 
