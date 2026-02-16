@@ -8,7 +8,7 @@ Cada fila representa una actividad/lección.
 Encabezados obligatorios:
 
 ```csv
-courseId,courseTitle,instructor,instructorTitle,courseDescription,courseLongDescription,rating,reviewsCount,studentsCount,courseDuration,level,category,image,bannerImage,certificatePrice,tags,moduleId,moduleTitle,lessonId,lessonTitle,lessonDuration,lessonType,lessonUrl,lessonContent,required,taskPrompt,quizId,quizQuestion,quizOptions,quizAnswer,quizExplanation
+courseId,courseTitle,instructor,instructorTitle,courseDescription,courseLongDescription,rating,reviewsCount,studentsCount,courseDuration,level,category,image,bannerImage,certificatePrice,tags,courseIncludes,breadcrumbLabel,moduleId,moduleTitle,lessonId,lessonTitle,lessonDuration,lessonType,lessonUrl,lessonContent,required,taskPrompt,quizId,quizQuestion,quizOptions,quizAnswer,quizExplanation
 ```
 
 Notas:
@@ -16,6 +16,8 @@ Notas:
 - `quizOptions`: separadas con `|` (ejemplo: `A|B|C|D`)
 - `required`: `true` o `false`
 - `tags`: separadas con `|`
+- `courseIncludes`: ítems de “Este curso incluye” separados con `|`
+- `breadcrumbLabel`: texto del breadcrumb (ej: `Explorar Programas`)
 
 ## 2) Hoja `users`
 Encabezados:

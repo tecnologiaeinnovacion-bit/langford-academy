@@ -311,7 +311,9 @@ const AdminDashboard: React.FC = () => {
       longDescription: newCourse.longDescription || newCourse.description || '',
       instructorTitle: 'Staff Langford',
       image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800',
-      modules: []
+      modules: [],
+      includes: ['Acceso ilimitado a videos HD', 'Mentoría IA personalizada', 'Certificación verificable', 'Acceso en móvil y web'],
+      breadcrumbLabel: 'Explorar Programas'
     };
     setCourses([...courses, course]);
     setShowAddForm(false);
@@ -426,6 +428,19 @@ const AdminDashboard: React.FC = () => {
                       <input
                         className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
                         type="number"
+                        value={c.studentsCount}
+                        onChange={e => handleCourseFieldChange(c.id, 'studentsCount', Number(e.target.value))}
+                        placeholder="Estudiantes activos"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        value={c.breadcrumbLabel || ''}
+                        onChange={e => handleCourseFieldChange(c.id, 'breadcrumbLabel', e.target.value)}
+                        placeholder="Breadcrumb (ej: Explorar Programas)"
+                      />
+                      <input
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+                        type="number"
                         value={c.price}
                         onChange={e => handleCourseFieldChange(c.id, 'price', Number(e.target.value))}
                         placeholder="Precio del curso"
@@ -454,6 +469,12 @@ const AdminDashboard: React.FC = () => {
                         value={(c.tags || []).join(', ')}
                         onChange={e => handleCourseFieldChange(c.id, 'tags', e.target.value.split(',').map(tag => tag.trim()).filter(Boolean))}
                         placeholder="Tags (separados por coma)"
+                      />
+                      <textarea
+                        className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm md:col-span-2 h-24"
+                        value={(c.includes || []).join('\n')}
+                        onChange={e => handleCourseFieldChange(c.id, 'includes', e.target.value.split('\n').map(item => item.trim()).filter(Boolean))}
+                        placeholder="Este curso incluye (una línea por ítem)"
                       />
                     </div>
                   </div>

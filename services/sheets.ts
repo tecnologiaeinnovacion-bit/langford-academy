@@ -120,7 +120,9 @@ export const mapSheetToCourses = (csvContent: string): Course[] => {
         price: 0,
         certificatePrice: Number(record.certificatePrice || 150000),
         modules: [],
-        tags: (record.tags || '').split('|').filter(Boolean)
+        tags: (record.tags || '').split('|').filter(Boolean),
+        includes: (record.courseIncludes || '').split('|').map(item => item.trim()).filter(Boolean),
+        breadcrumbLabel: record.breadcrumbLabel || 'Explorar Programas'
       });
     }
 

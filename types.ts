@@ -50,6 +50,8 @@ export interface Course {
   sponsorLogo?: string;
   tags?: string[];
   bannerImage?: string;
+  includes?: string[];
+  breadcrumbLabel?: string;
 }
 
 export interface User {

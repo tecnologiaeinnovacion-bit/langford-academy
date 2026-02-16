@@ -13,6 +13,12 @@ const CourseDetail: React.FC = () => {
   const enrollmentIds = user ? getEnrollments(user.id ?? '') : [];
   const isEnrolled = user ? enrollmentIds.includes(course?.id ?? '') : false;
   const completedLessons = user && course ? getCourseProgress(user.id ?? '', course.id) : [];
+  const defaultIncludes = [
+    'Acceso ilimitado a videos HD',
+    'Mentoría IA personalizada',
+    'Certificación verificable',
+    'Acceso en móvil y web'
+  ];
 
   const progressPercent = useMemo(() => {
     if (!course || !user) return 0;
@@ -56,7 +62,7 @@ const CourseDetail: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row relative z-10 items-center">
           <div className="md:w-2/3">
             <nav className="flex text-[10px] text-cyan-400 mb-8 font-black uppercase tracking-[4px]">
-              <Link to="/" className="hover:text-white transition-colors">Explorar Programas</Link>
+              <Link to="/" className="hover:text-white transition-colors">{course.breadcrumbLabel || 'Explorar Programas'}</Link>
               <span className="mx-3 text-white/20">/</span>
               <span>{course.category}</span>
             </nav>
@@ -98,7 +104,7 @@ const CourseDetail: React.FC = () => {
                 </div>
               </div>
               <div className="text-left">
-                <p className="text-cyan-400 font-black text-xl">{(course.studentsCount + 2450).toLocaleString()}</p>
+                <p className="text-cyan-400 font-black text-xl">{course.studentsCount.toLocaleString()}</p>
                 <p className="text-[10px] text-blue-100/50 font-black uppercase tracking-widest">Estudiantes Activos</p>
               </div>
             </div>
@@ -174,22 +180,12 @@ const CourseDetail: React.FC = () => {
              <div className="bg-gray-50 p-10 rounded-[40px] border border-gray-100">
                 <h3 className="text-xl font-black mb-8 text-gray-900 uppercase tracking-widest">Este curso incluye:</h3>
                 <ul className="space-y-6">
-                  <li className="flex items-center space-x-4">
-                    <i className="fas fa-video text-[#d4af37] text-lg"></i>
-                    <span className="text-sm font-bold text-gray-600">Acceso ilimitado a videos HD</span>
-                  </li>
-                  <li className="flex items-center space-x-4">
-                    <i className="fas fa-robot text-[#d4af37] text-lg"></i>
-                    <span className="text-sm font-bold text-gray-600">Mentoría IA personalizada</span>
-                  </li>
-                  <li className="flex items-center space-x-4">
-                    <i className="fas fa-medal text-[#d4af37] text-lg"></i>
-                    <span className="text-sm font-bold text-gray-600">Certificación verificable</span>
-                  </li>
-                  <li className="flex items-center space-x-4">
-                    <i className="fas fa-mobile-alt text-[#d4af37] text-lg"></i>
-                    <span className="text-sm font-bold text-gray-600">Acceso en móvil y web</span>
-                  </li>
+                  {(course.includes?.length ? course.includes : defaultIncludes).map((item, index) => (
+                    <li key={`${item}-${index}`} className="flex items-center space-x-4">
+                      <i className="fas fa-check-circle text-[#d4af37] text-lg"></i>
+                      <span className="text-sm font-bold text-gray-600">{item}</span>
+                    </li>
+                  ))}
                 </ul>
              </div>
 
