@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
+import { fetchCsvRecords, mapSheetSiteContent, mapSheetUsers, postSheetsBackendSnapshot } from '../services/sheetsBackend';
+import { mapSheetToCourses } from '../services/sheets';
 import { Course, Module, Lesson, ResourceType, SiteContent } from '../types';
-import { getCertificates, getCourses, getCurrentUser, getPayments, getSiteContent, getUsers, setCourses as setCoursesStore, setSiteContent } from '../services/storage';
+import { getCertificates, getCourses, getCurrentUser, getPayments, getSiteContent, getUsers, setCourses as setCoursesStore, setSiteContent, setUsers } from '../services/storage';
 
 const AdminDashboard: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>(getCourses());
@@ -13,6 +15,15 @@ const AdminDashboard: React.FC = () => {
   const certificates = getCertificates();
   const [siteContentState, setSiteContentState] = useState<SiteContent>(getSiteContent());
   const currentUser = getCurrentUser();
+  const [sheetsConfig, setSheetsConfig] = useState({
+    coursesCsvUrl: '',
+    usersCsvUrl: '',
+    siteContentCsvUrl: '',
+    webhookUrl: '',
+    webhookToken: import.meta.env.VITE_SHEETS_SYNC_TOKEN || ''
+  });
+  const [syncStatus, setSyncStatus] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   if (!currentUser || currentUser.role !== 'ADMIN') {
     return (
@@ -297,6 +308,93 @@ const AdminDashboard: React.FC = () => {
       }
       return c;
     }));
+  };
+
+
+  const importCoursesFromSheets = async () => {
+    if (!sheetsConfig.coursesCsvUrl) {
+      setSyncStatus('Agrega la URL CSV de cursos.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const response = await fetch(sheetsConfig.coursesCsvUrl);
+      if (!response.ok) throw new Error('No se pudo leer cursos.');
+      const csv = await response.text();
+      const imported = mapSheetToCourses(csv);
+      if (!imported.length) throw new Error('El CSV no trae cursos válidos.');
+      setCourses(imported);
+      setSyncStatus(`Cursos importados: ${imported.length}`);
+    } catch (error) {
+      setSyncStatus(`Error importando cursos: ${(error as Error).message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const importUsersFromSheets = async () => {
+    if (!sheetsConfig.usersCsvUrl) {
+      setSyncStatus('Agrega la URL CSV de usuarios.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const records = await fetchCsvRecords(sheetsConfig.usersCsvUrl);
+      const importedUsers = mapSheetUsers(records);
+      if (!importedUsers.length) throw new Error('No se encontraron usuarios válidos.');
+      const merged = [...users.filter(user => user.role === 'ADMIN'), ...importedUsers];
+      setUsers(merged);
+      setSyncStatus(`Usuarios importados: ${importedUsers.length}`);
+    } catch (error) {
+      setSyncStatus(`Error importando usuarios: ${(error as Error).message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const importSiteContentFromSheets = async () => {
+    if (!sheetsConfig.siteContentCsvUrl) {
+      setSyncStatus('Agrega la URL CSV de contenido del sitio.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const records = await fetchCsvRecords(sheetsConfig.siteContentCsvUrl);
+      const imported = mapSheetSiteContent(records);
+      setSiteContentState(prev => ({ ...prev, ...imported }));
+      setSyncStatus('Contenido del sitio importado correctamente.');
+    } catch (error) {
+      setSyncStatus(`Error importando contenido: ${(error as Error).message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const pushSnapshotToSheetsBackend = async () => {
+    if (!sheetsConfig.webhookUrl || !sheetsConfig.webhookToken) {
+      setSyncStatus('Debes completar URL de webhook y token.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      await postSheetsBackendSnapshot(
+        sheetsConfig.webhookUrl,
+        {
+          users,
+          courses,
+          payments,
+          certificates,
+          siteContent: siteContentState,
+          generatedAt: new Date().toISOString()
+        },
+        sheetsConfig.webhookToken
+      );
+      setSyncStatus('Datos enviados al backend de Sheets.');
+    } catch (error) {
+      setSyncStatus(`Error enviando snapshot: ${(error as Error).message}`);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleAddCourse = () => {
@@ -826,6 +924,55 @@ const AdminDashboard: React.FC = () => {
                 placeholder="Texto horario"
               />
             </div>
+          </div>
+        </section>
+
+        <section className="mt-16 bg-[#111] p-8 rounded-[40px] border border-white/5">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-white">Sheets Backend Sync</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-2">Importar y publicar datos como backend adicional</p>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Bidireccional</span>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={sheetsConfig.coursesCsvUrl}
+              onChange={e => setSheetsConfig({ ...sheetsConfig, coursesCsvUrl: e.target.value })}
+              placeholder="URL CSV cursos (publish to web)"
+            />
+            <button onClick={importCoursesFromSheets} disabled={isSyncing} className="bg-[#d4af37] text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50">Importar cursos</button>
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={sheetsConfig.usersCsvUrl}
+              onChange={e => setSheetsConfig({ ...sheetsConfig, usersCsvUrl: e.target.value })}
+              placeholder="URL CSV usuarios"
+            />
+            <button onClick={importUsersFromSheets} disabled={isSyncing} className="bg-[#d4af37] text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50">Importar usuarios</button>
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={sheetsConfig.siteContentCsvUrl}
+              onChange={e => setSheetsConfig({ ...sheetsConfig, siteContentCsvUrl: e.target.value })}
+              placeholder="URL CSV contenido sitio (columnas key,value)"
+            />
+            <button onClick={importSiteContentFromSheets} disabled={isSyncing} className="bg-[#d4af37] text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50">Importar contenido</button>
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={sheetsConfig.webhookUrl}
+              onChange={e => setSheetsConfig({ ...sheetsConfig, webhookUrl: e.target.value })}
+              placeholder="Webhook URL (Apps Script / backend propio)"
+            />
+            <input
+              className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm"
+              value={sheetsConfig.webhookToken}
+              onChange={e => setSheetsConfig({ ...sheetsConfig, webhookToken: e.target.value })}
+              placeholder="Token de sincronización"
+            />
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <button onClick={pushSnapshotToSheetsBackend} disabled={isSyncing} className="bg-white/10 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50">Enviar snapshot a Sheets backend</button>
+            <p className="text-xs text-gray-400">{syncStatus}</p>
           </div>
         </section>
 

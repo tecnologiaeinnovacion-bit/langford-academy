@@ -1,8 +1,10 @@
 # Google Sheets template (Langford Academy)
 
-Usa **3 hojas** en el archivo de Google Sheets:
+Usa este Sheet como **backend adicional** para:
+1) **Importar datos a la web** (cursos, usuarios, contenido), y
+2) **Recibir snapshot de la web** por webhook (modo push).
 
-## 1) Hoja `courses_raw`
+## 1) Hoja `courses_raw` (import -> web)
 Cada fila representa una actividad/lección.
 
 Encabezados obligatorios:
@@ -19,14 +21,35 @@ Notas:
 - `courseIncludes`: ítems de “Este curso incluye” separados con `|`
 - `breadcrumbLabel`: texto del breadcrumb (ej: `Explorar Programas`)
 
-## 2) Hoja `users`
+## 2) Hoja `users` (import -> web)
 Encabezados:
 
 ```csv
-id,name,email,phone,country,role
+id,name,email,phone,country,role,password
 ```
 
-## 3) Hoja `payments`
+- `role`: `USER` o `ADMIN`
+
+## 3) Hoja `site_content` (import -> web)
+Formato clave-valor.
+
+Encabezados:
+
+```csv
+key,value
+```
+
+Ejemplos de `key` soportadas:
+- `heroTitle`, `heroSubtitle`, `heroCta`
+- `infoTitle`, `infoBody`, `infoBullets` (`|` separado)
+- `sponsorsTitle`, `sponsorsLogos` (`|` separado)
+- `promosTitle`, `promosBody`, `promosHighlights` (`|` separado)
+- `contactTitle`, `contactBody`, `addressTitle`, `addressBody`
+- `legalTitle`, `legalLinks` (`|` separado)
+- `hoursTitle`, `hoursBody`, `footerNote`
+- `bodyFont`, `headingFont`, `accentColor`, `primaryColor`, `heroTitleSize`, `heroSubtitleSize`, `borderRadius`
+
+## 4) Hoja `payments` (export opcional)
 Encabezados:
 
 ```csv
@@ -34,18 +57,25 @@ paymentId,userId,courseId,certificateId,amount,status,provider,token,createdAt,u
 ```
 
 - `status`: `PENDING|PAID|FAILED`
-- `token`: token fijo para conciliación (ejemplo: `LANGFORD_PSE_TOKEN`)
+- `token`: token fijo de conciliación (ejemplo: `LANGFORD_PSE_TOKEN`)
 
 ---
 
-## Cómo conectarlo en la app
-1. Publica el Sheet como CSV (hoja `courses_raw`).
-2. Crea `.env`:
+## Cómo conectarlo en la app (import)
+1. Publica cada hoja como CSV (Archivo -> Compartir/Publicar en la web).
+2. En Admin > **Sheets Backend Sync** pega las URLs CSV y usa:
+   - `Importar cursos`
+   - `Importar usuarios`
+   - `Importar contenido`
 
-```bash
-VITE_COURSES_SHEET_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=csv&gid=<GID_COURSES_RAW>"
-```
+> También puedes dejar `VITE_COURSES_SHEET_URL` para carga automática de cursos al iniciar.
 
-3. Reinicia Vite.
+## Cómo subir datos desde la web a Sheets (push)
+Google Sheets no acepta escritura directa sin autenticación. Usa un backend intermedio:
+- Opción recomendada: **Google Apps Script Web App** o backend propio.
+- En Admin pega:
+  - `Webhook URL`
+  - `Token de sincronización`
+- Pulsa **Enviar snapshot a Sheets backend**.
 
-La app tomará cursos automáticamente desde ese CSV si hay filas válidas.
+El payload incluye: `users`, `courses`, `payments`, `certificates`, `siteContent`, `generatedAt`.
