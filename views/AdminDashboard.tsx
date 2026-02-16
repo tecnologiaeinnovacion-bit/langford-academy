@@ -550,6 +550,72 @@ const AdminDashboard: React.FC = () => {
                 placeholder="Subtítulo del hero"
               />
             </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - tamaño título hero (px)</label>
+              <input
+                type="number"
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.heroTitleSize}
+                onChange={e => setSiteContentState({ ...siteContentState, heroTitleSize: Number(e.target.value) || 64 })}
+                placeholder="64"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - tamaño subtítulo hero (px)</label>
+              <input
+                type="number"
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.heroSubtitleSize}
+                onChange={e => setSiteContentState({ ...siteContentState, heroSubtitleSize: Number(e.target.value) || 20 })}
+                placeholder="20"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - tipografía títulos</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.headingFont}
+                onChange={e => setSiteContentState({ ...siteContentState, headingFont: e.target.value })}
+                placeholder="Inter, sans-serif"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - tipografía cuerpo</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.bodyFont}
+                onChange={e => setSiteContentState({ ...siteContentState, bodyFont: e.target.value })}
+                placeholder="Inter, sans-serif"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - color acento</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.accentColor}
+                onChange={e => setSiteContentState({ ...siteContentState, accentColor: e.target.value })}
+                placeholder="#d4af37"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - color fondo principal</label>
+              <input
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.primaryColor}
+                onChange={e => setSiteContentState({ ...siteContentState, primaryColor: e.target.value })}
+                placeholder="#0a0a0a"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Estilo - radio de tarjetas (px)</label>
+              <input
+                type="number"
+                className="w-full bg-white/5 p-3 rounded-xl outline-none text-sm mt-2"
+                value={siteContentState.borderRadius}
+                onChange={e => setSiteContentState({ ...siteContentState, borderRadius: Number(e.target.value) || 32 })}
+                placeholder="32"
+              />
+            </div>
             <div className="md:col-span-2">
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-black">Footer - nota institucional</label>
               <textarea

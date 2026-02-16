@@ -28,7 +28,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a0a]">
+    <div className="flex flex-col min-h-screen bg-[#0a0a0a]" style={{ backgroundColor: siteContent.primaryColor || "#0a0a0a", fontFamily: siteContent.bodyFont || "Inter, sans-serif" }}>
       {!isLearningView && !isAuthView && !isAdminPath && <Navbar />}
       <main className="flex-grow">
         <Routes>

@@ -90,6 +90,13 @@ export interface SiteContent {
   heroTitle: string;
   heroSubtitle: string;
   heroCta: string;
+  heroTitleSize: number;
+  heroSubtitleSize: number;
+  bodyFont: string;
+  headingFont: string;
+  borderRadius: number;
+  accentColor: string;
+  primaryColor: string;
   infoTitle: string;
   infoBody: string;
   infoBullets: string[];

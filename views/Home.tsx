@@ -12,6 +12,11 @@ const Home: React.FC = () => {
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState('Todos');
   const heroWords = siteContent.heroTitle.split(' ');
+  const themeStyle: React.CSSProperties = {
+    fontFamily: siteContent.bodyFont || 'Inter, sans-serif',
+    ['--brand-accent' as string]: siteContent.accentColor || '#d4af37',
+    ['--brand-primary' as string]: siteContent.primaryColor || '#0a0a0a'
+  };
   const heroLeading = heroWords.slice(0, 2).join(' ');
   const heroTrailing = heroWords.slice(2).join(' ');
   useEffect(() => {
@@ -36,7 +41,7 @@ const Home: React.FC = () => {
   }, [activeTag, courses, search]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-white" style={themeStyle}>
       {/* Hero Section */}
       <section className="relative py-32 overflow-hidden border-b border-white/5">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-[#d4af37]/5 blur-[120px] rounded-full -mr-40"></div>
@@ -44,19 +49,19 @@ const Home: React.FC = () => {
           <div className="grid gap-16 lg:grid-cols-[1.1fr_0.9fr] items-center">
             <div className="max-w-3xl">
               <p className="text-[11px] uppercase tracking-[5px] font-black text-gray-500 mb-6">Langford Global Academy</p>
-              <h1 className="text-6xl md:text-7xl font-black leading-[0.9] mb-8 tracking-tighter">
+              <h1 className="font-black leading-[0.9] mb-8 tracking-tighter transition-all duration-500" style={{ fontFamily: siteContent.headingFont || 'Inter, sans-serif', fontSize: `${siteContent.heroTitleSize || 64}px` }}>
                 {heroLeading} <br/>
                 <span className="text-[#d4af37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
                   {heroTrailing}
                 </span>
               </h1>
-              <p className="text-xl text-gray-400 mb-10 max-w-xl leading-relaxed font-medium">
+              <p className="text-gray-400 mb-10 max-w-xl leading-relaxed font-medium transition-all duration-500" style={{ fontSize: `${siteContent.heroSubtitleSize || 20}px` }}>
                 {siteContent.heroSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
                 <button 
                   onClick={() => navigate('/register')}
-                  className="bg-[#d4af37] text-black px-12 py-5 rounded-full font-black text-xl hover:bg-[#f1d279] transition-all shadow-2xl hover:scale-105"
+                  className="text-black px-12 py-5 rounded-full font-black text-xl transition-all shadow-2xl hover:scale-105 hover:brightness-110" style={{ backgroundColor: siteContent.accentColor || '#d4af37' }}
                 >
                   {siteContent.heroCta}
                 </button>
@@ -78,11 +83,11 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 rounded-[40px] border border-white/10 shadow-2xl">
+            <div className="bg-gradient-to-br from-[#111] to-[#050505] p-10 border border-white/10 shadow-2xl transition-transform duration-500 hover:-translate-y-1" style={{ borderRadius: `${siteContent.borderRadius || 32}px` }}>
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{siteContent.promosTitle}</p>
-                  <h3 className="text-2xl font-black text-white mt-2">{siteContent.promosTitle}</h3>
+                  <h3 className="text-2xl font-black text-white mt-2" style={{ fontFamily: siteContent.headingFont || 'Inter, sans-serif' }}>{siteContent.promosTitle}</h3>
                 </div>
                 <span className="text-[10px] uppercase tracking-widest text-[#d4af37] font-black">Actualizado</span>
               </div>
